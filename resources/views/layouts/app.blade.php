@@ -736,8 +736,11 @@
         <a href="{{ route('transaksi.keluar') }}" class="slink {{ request()->routeIs('transaksi.keluar','transaksi.create-keluar') ? 'active' : '' }}">
             <i class="bi bi-box-arrow-up"></i> Barang Keluar
         </a>
-        <a href="{{ route('retur.index') }}" class="slink {{ request()->routeIs('retur.*') ? 'active' : '' }}">
+        <a href="{{ route('retur.index') }}" class="slink {{ request()->routeIs('retur.index','retur.create') ? 'active' : '' }}">
             <i class="bi bi-arrow-return-left"></i> Retur Customer
+        </a>
+        <a href="{{ route('retur.produksi.index') }}" class="slink {{ request()->routeIs('retur.produksi.*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-counterclockwise"></i> Retur Produksi
         </a>
 
         <div class="nav-sep">Data</div>
@@ -749,9 +752,6 @@
         <div class="nav-sep">Laporan</div>
         <a href="{{ route('laporan.stok') }}" class="slink {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
             <i class="bi bi-clipboard-data"></i> Laporan Stok
-        </a>
-        <a href="{{ route('laporan.stok-per-lot') }}" class="slink {{ request()->routeIs('laporan.stok-per-lot') ? 'active' : '' }}">
-            <i class="bi bi-layers"></i> Stok Per Lot
         </a>
         <a href="{{ route('laporan.transaksi') }}" class="slink {{ request()->routeIs('laporan.transaksi') ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i> Laporan Transaksi

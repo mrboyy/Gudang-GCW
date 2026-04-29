@@ -31,6 +31,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/retur-customer', [TransaksiController::class, 'retur'])->name('retur.index');
     Route::get('/retur-customer/create', [TransaksiController::class, 'createRetur'])->name('retur.create');
 
+    // ── RETUR PRODUKSI ──
+    Route::get('/retur-produksi', [TransaksiController::class, 'returProduksi'])->name('retur.produksi.index');
+    Route::get('/retur-produksi/create', [TransaksiController::class, 'createReturProduksi'])->name('retur.produksi.create');
+
     Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
     Route::get('/transaksi/{transaksi}', [TransaksiController::class, 'show'])->name('transaksi.show');
 
@@ -50,7 +54,7 @@ Route::middleware(['auth'])->group(function () {
     // ── LAPORAN — Kepala Gudang & Admin saja ──
     Route::middleware(['role:kepala_gudang,admin'])->prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/stok', [LaporanController::class, 'stok'])->name('stok');
-        Route::get('/stok-per-lot', [LaporanController::class, 'stokPerLot'])->name('stok-per-lot');
+        Route::get('/export-stok', [LaporanController::class, 'exportStok'])->name('export-stok');
         Route::get('/transaksi', [LaporanController::class, 'transaksi'])->name('transaksi');
         Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
     });

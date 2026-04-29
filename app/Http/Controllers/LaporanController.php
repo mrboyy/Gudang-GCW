@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Transaksi;
-use App\Models\Stok;
 use App\Models\Laporan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,18 +24,41 @@ class LaporanController extends Controller
         return view('laporan.stok', compact('barangs'));
     }
 
-    public function stokPerLot(Request $request)
+    public function exportStok()
     {
-        $query = Stok::with('barang')->where('stok_akhir', '>', 0);
-        if ($request->nomor_lot) {
-            $query->where('nomor_lot', 'like', "%{$request->nomor_lot}%");
-        }
-        if ($request->merk) {
-            $query->whereHas('barang', fn($q) => $q->where('merk', 'like', "%{$request->merk}%"));
-        }
-        $stoks = $query->orderBy('tanggal_update', 'desc')->paginate(20)->withQueryString();
-        $merks = Barang::where('is_active', true)->distinct()->pluck('merk');
-        return view('laporan.stok-per-lot', compact('stoks', 'merks'));
+        $barangs = Barang::with('stoks')->where('is_active', true)->orderBy('nama_barang')->get();
+
+        $filename = 'laporan-stok-' . date('Y-m-d') . '.csv';
+        $headers  = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($barangs) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, ['Kode Barang', 'Nama Barang', 'Merk', 'Satuan', 'Nomor Lot', 'Stok Akhir', 'Update Terakhir']);
+            foreach ($barangs as $b) {
+                if ($b->stoks->isEmpty()) {
+                    fputcsv($file, [
+                        $b->kode_barang, $b->nama_barang, $b->merk ?? '-', $b->satuan,
+                        '-', $b->getStok(), '-',
+                    ]);
+                } else {
+                    foreach ($b->stoks->sortByDesc('tanggal_update') as $s) {
+                        fputcsv($file, [
+                            $b->kode_barang, $b->nama_barang, $b->merk ?? '-', $b->satuan,
+                            $s->nomor_lot ?? '(Tanpa Lot)',
+                            $s->stok_akhir,
+                            $s->tanggal_update->format('d/m/Y H:i'),
+                        ]);
+                    }
+                }
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function transaksi(Request $request)

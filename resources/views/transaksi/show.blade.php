@@ -4,18 +4,28 @@
 
 @section('content')
 @php
-    $jenis     = $transaksi->jenis_transaksi;
-    $isMasuk   = $jenis === 'masuk';
-    $isRetur   = $jenis === 'retur_customer';
-    $backRoute = $isMasuk ? route('transaksi.masuk') : ($isRetur ? route('retur.index') : route('transaksi.keluar'));
-    $accentBg  = $isMasuk ? 'var(--success-soft)' : ($isRetur ? 'var(--info-soft)' : 'var(--brand-soft)');
-    $accentClr = $isMasuk ? 'var(--success)' : ($isRetur ? 'var(--info)' : 'var(--brand)');
-    $numClr    = $isMasuk ? 'var(--success)' : ($isRetur ? 'var(--info)' : 'var(--danger)');
-    $badgeBg   = $isMasuk ? 'var(--success-soft)' : ($isRetur ? 'var(--info-soft)' : 'var(--brand-soft)');
-    $badgeClr  = $isMasuk ? 'var(--success)' : ($isRetur ? 'var(--info)' : 'var(--brand)');
-    $badgeBdr  = $isMasuk ? '#A7F3D0' : ($isRetur ? '#BFDBFE' : '#FDDDB5');
-    $badgeIcon = $isMasuk ? 'box-arrow-in-down' : ($isRetur ? 'arrow-return-left' : 'box-arrow-up');
-    $badgeTxt  = $isMasuk ? 'Barang Masuk' : ($isRetur ? 'Retur Customer' : 'Barang Keluar');
+    $jenis            = $transaksi->jenis_transaksi;
+    $isMasuk          = $jenis === 'masuk';
+    $isReturCustomer  = $jenis === 'retur_customer';
+    $isReturProduksi  = $jenis === 'retur_produksi';
+    $isRetur          = $isReturCustomer || $isReturProduksi;
+
+    if ($isMasuk)         $backRoute = route('transaksi.masuk');
+    elseif ($isReturCustomer) $backRoute = route('retur.index');
+    elseif ($isReturProduksi) $backRoute = route('retur.produksi.index');
+    else                  $backRoute = route('transaksi.keluar');
+
+    // Accent for quantity header
+    if ($isMasuk)         { $accentBg='var(--success-soft)'; $accentClr='var(--success)'; $numClr='var(--success)'; }
+    elseif ($isReturCustomer) { $accentBg='var(--info-soft)'; $accentClr='var(--info)'; $numClr='var(--info)'; }
+    elseif ($isReturProduksi) { $accentBg='var(--warning-soft)'; $accentClr='var(--warning)'; $numClr='var(--warning)'; }
+    else                  { $accentBg='var(--brand-soft)'; $accentClr='var(--brand)'; $numClr='var(--danger)'; }
+
+    // Badge
+    if ($isMasuk)         { $badgeBg='var(--success-soft)'; $badgeClr='var(--success)'; $badgeBdr='#A7F3D0'; $badgeIcon='box-arrow-in-down'; $badgeTxt='Barang Masuk'; }
+    elseif ($isReturCustomer) { $badgeBg='var(--info-soft)'; $badgeClr='var(--info)'; $badgeBdr='#BFDBFE'; $badgeIcon='arrow-return-left'; $badgeTxt='Retur Customer'; }
+    elseif ($isReturProduksi) { $badgeBg='var(--warning-soft)'; $badgeClr='var(--warning)'; $badgeBdr='#FCD34D'; $badgeIcon='arrow-counterclockwise'; $badgeTxt='Retur Produksi'; }
+    else                  { $badgeBg='var(--brand-soft)'; $badgeClr='var(--brand)'; $badgeBdr='#FDDDB5'; $badgeIcon='box-arrow-up'; $badgeTxt='Barang Keluar'; }
 @endphp
 
 <div class="row justify-content-center">
