@@ -41,16 +41,37 @@
 
 <div class="card">
     <div class="card-header">Informasi Barang</div>
-    <form method="POST" action="{{ route('barang.update', $barang) }}">
+    <form method="POST" action="{{ route('barang.update', $barang) }}" enctype="multipart/form-data">
     @csrf @method('PUT')
     <div class="card-body p-4">
+
+        {{-- Foto --}}
+        <div class="mb-3">
+            <label class="form-label">Foto Barang</label>
+            @if($barang->foto)
+            <div class="mb-2" id="fotoLama">
+                <img src="{{ Storage::url($barang->foto) }}" alt="Foto"
+                     style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--border);object-fit:cover;">
+                <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Foto saat ini. Upload baru untuk mengganti.</div>
+            </div>
+            @endif
+            <div id="fotoPreviewWrap" style="display:none;margin-bottom:8px;">
+                <img id="fotoPreview" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--brand);object-fit:cover;">
+                <div style="font-size:.75rem;color:var(--brand);margin-top:4px;">Foto baru (belum tersimpan)</div>
+            </div>
+            <input type="file" name="foto" id="fotoInput"
+                   class="form-control @error('foto') is-invalid @enderror"
+                   accept="image/jpeg,image/png,image/webp" capture="environment">
+            @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Maks. 2MB · JPG, PNG, WebP</div>
+        </div>
 
         <div class="row g-3 mb-3">
             <div class="col-5">
                 <label class="form-label">Kode Barang <span class="text-danger">*</span></label>
                 <input type="text" name="kode_barang"
                        class="form-control @error('kode_barang') is-invalid @enderror"
-                       value="{{ old('kode_barang', $barang->kode_barang) }}" required>
+                       value="{{ old('kode_barang', $barang->kode_barang) }}" maxlength="100" required>
                 @error('kode_barang')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-7">
@@ -67,24 +88,24 @@
             <label class="form-label">Nama Barang <span class="text-danger">*</span></label>
             <input type="text" name="nama_barang"
                    class="form-control @error('nama_barang') is-invalid @enderror"
-                   value="{{ old('nama_barang', $barang->nama_barang) }}" required>
+                   value="{{ old('nama_barang', $barang->nama_barang) }}" maxlength="255" required>
         </div>
 
         <div class="row g-3 mb-3">
             <div class="col-7">
                 <label class="form-label">Merk</label>
-                <input type="text" name="merk" class="form-control" value="{{ old('merk', $barang->merk) }}">
+                <input type="text" name="merk" class="form-control" value="{{ old('merk', $barang->merk) }}" maxlength="255">
             </div>
             <div class="col-5">
                 <label class="form-label">Stok Minimum</label>
                 <input type="number" name="stok_minimum" class="form-control"
-                       value="{{ old('stok_minimum', $barang->stok_minimum) }}" min="0">
+                       value="{{ old('stok_minimum', $barang->stok_minimum) }}" min="0" max="999999">
             </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" rows="2">{{ old('deskripsi', $barang->deskripsi) }}</textarea>
+            <textarea name="deskripsi" class="form-control" rows="2" maxlength="1000">{{ old('deskripsi', $barang->deskripsi) }}</textarea>
         </div>
 
         <div class="pt-2" style="border-top:1px solid var(--border-soft);">
@@ -106,3 +127,20 @@
 </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('fotoInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('fotoPreview').src = e.target.result;
+        document.getElementById('fotoPreviewWrap').style.display = '';
+        const lama = document.getElementById('fotoLama');
+        if (lama) lama.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+@endpush

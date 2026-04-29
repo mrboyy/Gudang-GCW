@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
 {
-    protected $fillable = ['kode_barang', 'nama_barang', 'merk', 'satuan', 'stok_minimum', 'deskripsi', 'is_active'];
+    protected $fillable = ['kode_barang', 'nama_barang', 'merk', 'satuan', 'stok_minimum', 'deskripsi', 'is_active', 'foto'];
     protected $casts = ['is_active' => 'boolean'];
 
     public function transaksis() { return $this->hasMany(Transaksi::class, 'id_barang'); }
