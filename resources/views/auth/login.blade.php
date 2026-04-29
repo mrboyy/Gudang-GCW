@@ -14,7 +14,8 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%);
+            /* Abu-abu silver dari logo GCW */
+            background: linear-gradient(145deg, #C8CAC9 0%, #9EA2A2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -32,10 +33,11 @@
             overflow: hidden;
         }
 
-        /* ── Header abu-abu GCW ── */
+        /* ── Header: abu-abu gelap + garis oranye atas (dua warna logo) ── */
         .login-head {
             background: linear-gradient(160deg, #4B5563 0%, #1F2937 100%);
-            padding: 28px 30px 24px;
+            border-top: 5px solid #F5821F;
+            padding: 26px 30px 22px;
             position: relative;
             overflow: hidden;
         }
@@ -45,7 +47,7 @@
             top: -40px; right: -40px;
             width: 130px; height: 130px;
             border-radius: 50%;
-            background: rgba(255,255,255,.05);
+            background: rgba(255,255,255,.04);
         }
         .login-head::after {
             content: '';
@@ -53,7 +55,7 @@
             bottom: -30px; left: 20px;
             width: 80px; height: 80px;
             border-radius: 50%;
-            background: rgba(255,255,255,.04);
+            background: rgba(245,130,31,.06);
         }
         .login-head-top {
             display: flex;
@@ -133,8 +135,8 @@
         }
         .field-wrap input:focus {
             background: #fff;
-            border-color: #6B7280;
-            box-shadow: 0 0 0 3px rgba(107,114,128,.12);
+            border-color: #F5821F;
+            box-shadow: 0 0 0 3px rgba(245,130,31,.12);
         }
         .field-wrap input.has-toggle { padding-right: 40px; }
         .field-wrap .toggle-pass {
@@ -169,7 +171,7 @@
 
         .btn-login {
             width: 100%;
-            background: linear-gradient(160deg, #4B5563 0%, #1F2937 100%);
+            background: #F5821F;
             border: none;
             border-radius: 6px;
             color: #fff;
@@ -179,11 +181,11 @@
             padding: 11px 16px;
             margin-top: 6px;
             cursor: pointer;
-            transition: opacity .15s, box-shadow .15s;
-            box-shadow: 0 2px 8px rgba(31,41,55,.3);
+            transition: background .15s, box-shadow .15s;
+            box-shadow: 0 2px 8px rgba(245,130,31,.35);
         }
-        .btn-login:hover  { opacity: .88; box-shadow: 0 4px 14px rgba(31,41,55,.35); }
-        .btn-login:active { opacity: .75; }
+        .btn-login:hover  { background: #D96E10; box-shadow: 0 4px 14px rgba(245,130,31,.4); }
+        .btn-login:active { background: #C26209; }
 
         .login-hint {
             font-size: .76rem;
@@ -194,10 +196,9 @@
 
         .login-footer {
             text-align: center;
-            color: rgba(255,255,255,.55);
+            color: rgba(0,0,0,.35);
             font-size: .72rem;
             margin-top: 14px;
-            text-shadow: 0 1px 2px rgba(0,0,0,.15);
         }
 
         @media (max-width: 460px) {
