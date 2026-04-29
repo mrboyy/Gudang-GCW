@@ -138,7 +138,6 @@
                                         <tr style="background:transparent;">
                                             <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Nomor Lot</th>
                                             <th class="text-end" style="background:transparent;font-size:.68rem;padding:6px 12px;">Stok</th>
-                                            <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Update Terakhir</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -152,14 +151,9 @@
                                                 @endif
                                             </td>
                                             <td class="text-end fw-bold"
-                                                style="color:{{ $s->stok_akhir <= 0 ? 'var(--danger)' : 'var(--text)' }};
-                                                       border-bottom:1px solid var(--border-soft);padding:8px 12px;">
+                                                style="color:var(--text);border-bottom:1px solid var(--border-soft);padding:8px 12px;">
                                                 {{ $s->stok_akhir }}
                                                 <small class="text-muted fw-normal">{{ $b->satuan }}</small>
-                                            </td>
-                                            <td class="text-muted"
-                                                style="font-size:.82rem;border-bottom:1px solid var(--border-soft);padding:8px 12px;">
-                                                {{ $s->tanggal_update->format('d/m/Y H:i') }}
                                             </td>
                                         </tr>
                                         @endforeach

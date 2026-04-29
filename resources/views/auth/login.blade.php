@@ -14,7 +14,7 @@
 
         body {
             min-height: 100vh;
-            background: #E8EAED;
+            background: linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,31 +27,50 @@
 
         .login-card {
             background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.06);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.18), 0 1px 4px rgba(0,0,0,.1);
             overflow: hidden;
         }
 
-        /* ── Header ── */
+        /* ── Header abu-abu GCW ── */
         .login-head {
-            background: #E8751A;
-            background-image: linear-gradient(160deg, #F08030 0%, #D4640A 100%);
-            padding: 26px 30px 22px;
+            background: linear-gradient(160deg, #4B5563 0%, #1F2937 100%);
+            padding: 28px 30px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-head::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 130px; height: 130px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.05);
+        }
+        .login-head::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: 20px;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.04);
         }
         .login-head-top {
             display: flex;
             align-items: center;
             gap: 13px;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            position: relative;
         }
         .logo-box {
-            width: 44px; height: 44px;
+            width: 46px; height: 46px;
             background: #fff;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
         }
         .logo-box img {
             width: 30px; height: 30px;
@@ -60,18 +79,22 @@
         .login-company {
             font-size: .79rem;
             font-weight: 600;
-            color: rgba(255,255,255,.8);
+            color: rgba(255,255,255,.7);
+            letter-spacing: .01em;
         }
         .login-head-title {
-            font-size: 1.18rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: #fff;
             line-height: 1.25;
+            position: relative;
+            letter-spacing: -.01em;
         }
         .login-head-sub {
             font-size: .81rem;
-            color: rgba(255,255,255,.65);
-            margin-top: 2px;
+            color: rgba(255,255,255,.5);
+            margin-top: 3px;
+            position: relative;
         }
 
         /* ── Body ── */
@@ -85,9 +108,7 @@
             display: block;
         }
 
-        .field-wrap {
-            position: relative;
-        }
+        .field-wrap { position: relative; }
         .field-wrap .f-icon {
             position: absolute;
             left: 11px;
@@ -104,7 +125,7 @@
             font-size: .9rem;
             font-family: inherit;
             border: 1.5px solid #D1D5DB;
-            border-radius: 5px;
+            border-radius: 6px;
             color: #111827;
             background: #F9FAFB;
             outline: none;
@@ -112,14 +133,13 @@
         }
         .field-wrap input:focus {
             background: #fff;
-            border-color: #E8751A;
-            box-shadow: 0 0 0 3px rgba(232,117,26,.1);
+            border-color: #6B7280;
+            box-shadow: 0 0 0 3px rgba(107,114,128,.12);
         }
         .field-wrap input.has-toggle { padding-right: 40px; }
         .field-wrap .toggle-pass {
             position: absolute;
-            right: 0;
-            top: 0; bottom: 0;
+            right: 0; top: 0; bottom: 0;
             width: 40px;
             background: none;
             border: none;
@@ -149,9 +169,9 @@
 
         .btn-login {
             width: 100%;
-            background: #E8751A;
+            background: linear-gradient(160deg, #4B5563 0%, #1F2937 100%);
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             color: #fff;
             font-size: .9rem;
             font-weight: 700;
@@ -159,10 +179,11 @@
             padding: 11px 16px;
             margin-top: 6px;
             cursor: pointer;
-            transition: background .15s;
+            transition: opacity .15s, box-shadow .15s;
+            box-shadow: 0 2px 8px rgba(31,41,55,.3);
         }
-        .btn-login:hover { background: #D4640A; }
-        .btn-login:active { background: #C25C09; }
+        .btn-login:hover  { opacity: .88; box-shadow: 0 4px 14px rgba(31,41,55,.35); }
+        .btn-login:active { opacity: .75; }
 
         .login-hint {
             font-size: .76rem;
@@ -173,14 +194,15 @@
 
         .login-footer {
             text-align: center;
-            color: #9CA3AF;
+            color: rgba(255,255,255,.55);
             font-size: .72rem;
             margin-top: 14px;
+            text-shadow: 0 1px 2px rgba(0,0,0,.15);
         }
 
         @media (max-width: 460px) {
-            .login-head { padding: 22px 22px 18px; }
-            .login-body { padding: 22px 22px 26px; }
+            .login-head  { padding: 22px 22px 18px; }
+            .login-body  { padding: 22px 22px 26px; }
         }
     </style>
 </head>
@@ -197,7 +219,7 @@
                 <span class="login-company">PT Galih Cipta Wisesa</span>
             </div>
             <div class="login-head-title">Sistem Pencatatan Gudang</div>
-            <div class="login-head-sub">Keluar Masuk Barang</div>
+            <div class="login-head-sub">Masuk untuk melanjutkan</div>
         </div>
 
         <div class="login-body">

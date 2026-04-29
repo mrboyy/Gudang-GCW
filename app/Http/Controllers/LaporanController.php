@@ -13,7 +13,10 @@ class LaporanController extends Controller
 {
     public function stok(Request $request)
     {
-        $query = Barang::with('stoks')->where('is_active', true);
+        // Hanya load lot yang stoknya > 0
+        $query = Barang::with(['stoks' => fn($q) => $q->where('stok_akhir', '>', 0)->orderBy('nomor_lot')])
+                       ->where('is_active', true)
+                       ->whereHas('stoks', fn($q) => $q->where('stok_akhir', '>', 0));
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -42,7 +45,9 @@ class LaporanController extends Controller
 
     public function exportStok(Request $request)
     {
-        $query = Barang::with('stoks')->where('is_active', true);
+        $query = Barang::with(['stoks' => fn($q) => $q->where('stok_akhir', '>', 0)->orderBy('nomor_lot')])
+                       ->where('is_active', true)
+                       ->whereHas('stoks', fn($q) => $q->where('stok_akhir', '>', 0));
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_barang', 'like', "%{$request->search}%")
@@ -71,10 +76,10 @@ class LaporanController extends Controller
             fputs($file, "\xEF\xBB\xBF");
 
             // Header kolom
-            fputcsv($file, ['Nama Barang', 'Merk', 'Kode', 'Satuan', 'Nomor Lot', 'Stok', 'Update Terakhir'], $sep);
+            fputcsv($file, ['Nama Barang', 'Merk', 'Kode', 'Satuan', 'Nomor Lot', 'Stok'], $sep);
 
             foreach ($barangs as $b) {
-                $totalStok = $b->getStok();
+                $totalStok = $b->stoks->sum('stok_akhir');
 
                 // Baris barang — total
                 fputcsv($file, [
@@ -84,11 +89,10 @@ class LaporanController extends Controller
                     $b->satuan,
                     '(Total)',
                     $totalStok,
-                    '',
                 ], $sep);
 
-                // Baris tiap lot (indented dengan spasi di Nama Barang)
-                foreach ($b->stoks->sortBy('nomor_lot') as $s) {
+                // Baris tiap lot
+                foreach ($b->stoks as $s) {
                     fputcsv($file, [
                         '    ' . ($s->nomor_lot ? 'Lot: ' . $s->nomor_lot : 'Tanpa Lot'),
                         '',
@@ -96,7 +100,6 @@ class LaporanController extends Controller
                         $b->satuan,
                         $s->nomor_lot ?? '-',
                         $s->stok_akhir,
-                        $s->tanggal_update->format('d/m/Y'),
                     ], $sep);
                 }
             }
