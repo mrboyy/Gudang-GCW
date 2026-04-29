@@ -42,7 +42,7 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th style="width:36px;"></th>
+                        <th style="width:80px;"></th>
                         <th>Kode</th>
                         <th>Nama Barang</th>
                         <th>Merk</th>
@@ -65,10 +65,12 @@
                     <tr class="stok-row {{ $hasLots ? 'has-lots' : '' }}"
                         data-target="lot-{{ $b->id }}"
                         style="cursor:{{ $hasLots ? 'pointer' : 'default' }};">
-                        <td class="text-center" style="padding:12px 8px;">
+                        <td style="padding:10px 8px;white-space:nowrap;">
                             @if($hasLots)
-                            <i class="bi bi-chevron-right toggle-icon"
-                               style="font-size:.75rem;color:var(--text-subtle);transition:transform .2s;display:inline-block;"></i>
+                            <span class="lot-toggle-btn">
+                                <i class="bi bi-chevron-right toggle-icon"></i>
+                                {{ $lots->count() }} lot
+                            </span>
                             @endif
                         </td>
                         <td><code class="code-tag">{{ $b->kode_barang }}</code></td>
@@ -152,7 +154,33 @@
 @push('styles')
 <style>
 .stok-row.has-lots:hover { background: #F5F7FA; }
+.lot-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border: 1px solid #FDDDB5;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s, border-color .15s;
+}
+.stok-row.has-lots:hover .lot-toggle-btn {
+    background: #FFE9CC;
+    border-color: var(--brand);
+}
+.stok-row.open .lot-toggle-btn {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+}
 .stok-row.open .toggle-icon { transform: rotate(90deg); }
+.lot-toggle-btn .toggle-icon { transition: transform .2s; display: inline-block; font-size: .7rem; }
 @media print {
     .card { box-shadow: none !important; border: 1px solid #ddd !important; }
     .btn, .card-footer { display: none !important; }
