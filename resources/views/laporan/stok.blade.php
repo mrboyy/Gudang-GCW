@@ -27,9 +27,9 @@
                        placeholder="Cari nama barang atau merk..." value="{{ request('search') }}">
             </div>
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Cari</button>
+                <button type="submit" class="btn btn-primary flex-fill">Cari</button>
                 @if(request('search'))
-                <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+                <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary">Reset</a>
                 @endif
             </div>
         </form>

@@ -100,8 +100,8 @@
                        placeholder="No. Lot..." value="{{ request('nomor_lot') }}">
             </div>
             <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Tampilkan</button>
-                <a href="{{ route('laporan.transaksi') }}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+                <button type="submit" class="btn btn-primary flex-fill">Tampilkan</button>
+                <a href="{{ route('laporan.transaksi') }}" class="btn btn-outline-secondary">Reset</a>
             </div>
         </form>
     </div>

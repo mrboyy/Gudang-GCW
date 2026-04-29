@@ -40,10 +40,7 @@
 </div>
 
 <div class="card">
-    <div class="card-header">
-        <i class="bi bi-pencil me-2" style="color:var(--text-muted);"></i>
-        <span>Informasi Barang</span>
-    </div>
+    <div class="card-header">Informasi Barang</div>
     <form method="POST" action="{{ route('barang.update', $barang) }}">
     @csrf @method('PUT')
     <div class="card-body p-4">
@@ -101,9 +98,7 @@
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
         <a href="{{ route('barang.index') }}" class="btn btn-outline-secondary">Batal</a>
-        <button type="submit" class="btn btn-primary px-5">
-            <i class="bi bi-check2 me-1"></i>Simpan Perubahan
-        </button>
+        <button type="submit" class="btn btn-primary px-5">Simpan Perubahan</button>
     </div>
     </form>
 </div>

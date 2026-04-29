@@ -75,9 +75,7 @@
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
         <a href="{{ route('barang.index') }}" class="btn btn-outline-secondary">Batal</a>
-        <button type="submit" class="btn btn-primary px-5">
-            <i class="bi bi-check2 me-1"></i>Simpan
-        </button>
+        <button type="submit" class="btn btn-primary px-5">Simpan</button>
     </div>
     </form>
 </div>
