@@ -10,7 +10,7 @@
         <p>Klik baris barang untuk melihat detail stok per nomor lot.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ route('laporan.export-stok') }}" class="btn btn-success">
+        <a href="{{ route('laporan.export-stok', request()->only(['search','merk','group_by'])) }}" class="btn btn-success">
             <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export Excel
         </a>
         <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -21,14 +21,32 @@
 
 <div class="card mb-3">
     <div class="card-body py-3">
-        <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-9">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Cari</label>
                 <input type="text" name="search" class="form-control"
-                       placeholder="Cari nama barang atau merk..." value="{{ request('search') }}">
+                       placeholder="Nama barang atau merk..." value="{{ request('search') }}">
             </div>
-            <div class="col-md-3 d-flex gap-2">
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Filter Merk</label>
+                <select name="merk" class="form-select">
+                    <option value="">Semua Merk</option>
+                    @foreach($merks as $m)
+                    <option value="{{ $m }}" {{ request('merk') === $m ? 'selected' : '' }}>{{ $m }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Group By</label>
+                <select name="group_by" class="form-select">
+                    <option value="">— Tanpa Grup —</option>
+                    <option value="merk"   {{ request('group_by') === 'merk'   ? 'selected' : '' }}>Merk</option>
+                    <option value="satuan" {{ request('group_by') === 'satuan' ? 'selected' : '' }}>Satuan</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2 align-items-end">
                 <button type="submit" class="btn btn-primary flex-fill">Cari</button>
-                @if(request('search'))
+                @if(request()->hasAny(['search','merk','group_by']))
                 <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary">Reset</a>
                 @endif
             </div>
@@ -42,34 +60,51 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th style="width:80px;"></th>
+                        <th style="width:40px;"></th>
                         <th>Kode</th>
                         <th>Nama Barang</th>
                         <th>Merk</th>
                         <th>Satuan</th>
-                        <th class="text-end">Stok Total</th>
+                        <th class="text-end">Stok</th>
                         <th class="text-end">Min.</th>
                         <th class="text-center">Kondisi</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php $prevGroup = null; @endphp
                     @forelse($barangs as $b)
                     @php
-                        $stok      = $b->getStok();
-                        $habis     = $b->isStokMinimum();
-                        $lots      = $b->stoks->sortByDesc('tanggal_update');
-                        $hasLots   = $b->stoks->isNotEmpty();
+                        $stok    = $b->getStok();
+                        $habis   = $b->isStokMinimum();
+                        $lots    = $b->stoks->sortBy('nomor_lot');
+                        $hasLots = $b->stoks->isNotEmpty();
+
+                        $curGroup = match($groupBy) {
+                            'merk'   => ($b->merk ?: '(Tanpa Merk)'),
+                            'satuan' => $b->satuan,
+                            default  => null,
+                        };
                     @endphp
 
-                    {{-- Main row --}}
+                    {{-- Group header --}}
+                    @if($groupBy && $curGroup !== $prevGroup)
+                    <tr class="group-header-row">
+                        <td colspan="8">
+                            <i class="bi bi-tag-fill me-2" style="color:var(--brand);font-size:.8rem;"></i>
+                            <span>{{ $curGroup }}</span>
+                        </td>
+                    </tr>
+                    @php $prevGroup = $curGroup; @endphp
+                    @endif
+
+                    {{-- Baris barang --}}
                     <tr class="stok-row {{ $hasLots ? 'has-lots' : '' }}"
                         data-target="lot-{{ $b->id }}"
                         style="cursor:{{ $hasLots ? 'pointer' : 'default' }};">
-                        <td style="padding:10px 8px;white-space:nowrap;">
+                        <td class="text-center" style="padding:10px 6px;">
                             @if($hasLots)
-                            <span class="lot-toggle-btn">
+                            <span class="lot-chevron">
                                 <i class="bi bi-chevron-right toggle-icon"></i>
-                                {{ $lots->count() }} lot
                             </span>
                             @endif
                         </td>
@@ -89,7 +124,7 @@
                         </td>
                     </tr>
 
-                    {{-- Lot detail sub-row --}}
+                    {{-- Lot detail --}}
                     @if($hasLots)
                     <tr class="lot-detail-row" id="lot-{{ $b->id }}" style="display:none;">
                         <td colspan="8" style="padding:0;background:#FAFBFC;border-bottom:2px solid var(--border);">
@@ -102,7 +137,7 @@
                                     <thead>
                                         <tr style="background:transparent;">
                                             <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Nomor Lot</th>
-                                            <th class="text-end" style="background:transparent;font-size:.68rem;padding:6px 12px;">Stok Akhir</th>
+                                            <th class="text-end" style="background:transparent;font-size:.68rem;padding:6px 12px;">Stok</th>
                                             <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Update Terakhir</th>
                                         </tr>
                                     </thead>
@@ -153,39 +188,56 @@
 
 @push('styles')
 <style>
-.stok-row.has-lots:hover { background: #F5F7FA; }
-.lot-toggle-btn {
+/* Toggle chevron — lingkaran kecil abu */
+.lot-chevron {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #F3F4F6;
+    border: 1.5px solid #D1D5DB;
+    flex-shrink: 0;
+}
+.lot-chevron .toggle-icon {
+    font-size: .82rem;
+    color: #4B5563;
+    transition: transform .2s;
+    display: inline-block;
+}
+.stok-row.has-lots:hover .lot-chevron {
+    background: #E5E7EB;
+    border-color: #9CA3AF;
+}
+.stok-row.open .lot-chevron {
     background: var(--brand-soft);
+    border-color: var(--brand);
+}
+.stok-row.open .lot-chevron .toggle-icon {
     color: var(--brand);
-    border: 1px solid #FDDDB5;
-    border-radius: 20px;
-    padding: 3px 10px;
-    font-size: .75rem;
+    transform: rotate(90deg);
+}
+.stok-row.has-lots:hover { background: #F9FAFB; }
+
+/* Group header row */
+.group-header-row td {
+    background: #F3F4F6;
+    border-top: 2px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 18px;
+    font-size: .78rem;
     font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    transition: background .15s, border-color .15s;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #374151;
 }
-.stok-row.has-lots:hover .lot-toggle-btn {
-    background: #FFE9CC;
-    border-color: var(--brand);
-}
-.stok-row.open .lot-toggle-btn {
-    background: var(--brand);
-    color: #fff;
-    border-color: var(--brand);
-}
-.stok-row.open .toggle-icon { transform: rotate(90deg); }
-.lot-toggle-btn .toggle-icon { transition: transform .2s; display: inline-block; font-size: .7rem; }
+
 @media print {
     .card { box-shadow: none !important; border: 1px solid #ddd !important; }
     .btn, .card-footer { display: none !important; }
     .lot-detail-row { display: table-row !important; }
-    .toggle-icon { display: none !important; }
+    .lot-chevron { display: none !important; }
 }
 </style>
 @endpush
@@ -194,9 +246,8 @@
 <script>
 document.querySelectorAll('.stok-row.has-lots').forEach(function(row) {
     row.addEventListener('click', function() {
-        var targetId = row.dataset.target;
-        var detail   = document.getElementById(targetId);
-        var isOpen   = row.classList.contains('open');
+        var detail = document.getElementById(row.dataset.target);
+        var isOpen = row.classList.contains('open');
         row.classList.toggle('open', !isOpen);
         detail.style.display = isOpen ? 'none' : 'table-row';
     });

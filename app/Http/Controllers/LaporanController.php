@@ -14,47 +14,93 @@ class LaporanController extends Controller
     public function stok(Request $request)
     {
         $query = Barang::with('stoks')->where('is_active', true);
+
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_barang', 'like', "%{$request->search}%")
                   ->orWhere('merk', 'like', "%{$request->search}%");
             });
         }
-        $barangs = $query->orderBy('nama_barang')->paginate(20)->withQueryString();
-        return view('laporan.stok', compact('barangs'));
+
+        if ($request->merk) {
+            $query->where('merk', $request->merk);
+        }
+
+        $groupBy = $request->group_by;
+        match ($groupBy) {
+            'merk'   => $query->orderBy('merk')->orderBy('nama_barang'),
+            'satuan' => $query->orderBy('satuan')->orderBy('nama_barang'),
+            default  => $query->orderBy('nama_barang'),
+        };
+
+        $barangs = $query->paginate(20)->withQueryString();
+        $merks   = Barang::where('is_active', true)->whereNotNull('merk')
+                         ->distinct()->orderBy('merk')->pluck('merk');
+
+        return view('laporan.stok', compact('barangs', 'merks', 'groupBy'));
     }
 
-    public function exportStok()
+    public function exportStok(Request $request)
     {
-        $barangs = Barang::with('stoks')->where('is_active', true)->orderBy('nama_barang')->get();
+        $query = Barang::with('stoks')->where('is_active', true);
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_barang', 'like', "%{$request->search}%")
+                  ->orWhere('merk', 'like', "%{$request->search}%");
+            });
+        }
+        if ($request->merk) $query->where('merk', $request->merk);
 
+        match ($request->group_by) {
+            'merk'   => $query->orderBy('merk')->orderBy('nama_barang'),
+            'satuan' => $query->orderBy('satuan')->orderBy('nama_barang'),
+            default  => $query->orderBy('nama_barang'),
+        };
+
+        $barangs  = $query->get();
         $filename = 'laporan-stok-' . date('Y-m-d') . '.csv';
-        $headers  = [
+        $sep      = ';'; // Excel Indonesia pakai ; sebagai pemisah
+
+        $headers = [
             'Content-Type'        => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($barangs) {
+        $callback = function () use ($barangs, $sep) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['Kode Barang', 'Nama Barang', 'Merk', 'Satuan', 'Nomor Lot', 'Stok Akhir', 'Update Terakhir']);
+
+            // Header kolom
+            fputcsv($file, ['Nama Barang', 'Merk', 'Kode', 'Satuan', 'Nomor Lot', 'Stok', 'Update Terakhir'], $sep);
+
             foreach ($barangs as $b) {
-                if ($b->stoks->isEmpty()) {
+                $totalStok = $b->getStok();
+
+                // Baris barang — total
+                fputcsv($file, [
+                    $b->nama_barang,
+                    $b->merk ?? '-',
+                    $b->kode_barang,
+                    $b->satuan,
+                    '(Total)',
+                    $totalStok,
+                    '',
+                ], $sep);
+
+                // Baris tiap lot (indented dengan spasi di Nama Barang)
+                foreach ($b->stoks->sortBy('nomor_lot') as $s) {
                     fputcsv($file, [
-                        $b->kode_barang, $b->nama_barang, $b->merk ?? '-', $b->satuan,
-                        '-', $b->getStok(), '-',
-                    ]);
-                } else {
-                    foreach ($b->stoks->sortByDesc('tanggal_update') as $s) {
-                        fputcsv($file, [
-                            $b->kode_barang, $b->nama_barang, $b->merk ?? '-', $b->satuan,
-                            $s->nomor_lot ?? '(Tanpa Lot)',
-                            $s->stok_akhir,
-                            $s->tanggal_update->format('d/m/Y H:i'),
-                        ]);
-                    }
+                        '    ' . ($s->nomor_lot ? 'Lot: ' . $s->nomor_lot : 'Tanpa Lot'),
+                        '',
+                        '',
+                        $b->satuan,
+                        $s->nomor_lot ?? '-',
+                        $s->stok_akhir,
+                        $s->tanggal_update->format('d/m/Y'),
+                    ], $sep);
                 }
             }
+
             fclose($file);
         };
 
@@ -127,9 +173,9 @@ class LaporanController extends Controller
 
         $callback = function () use ($transaksis) {
             $file = fopen('php://output', 'w');
-            // BOM untuk Excel agar bisa baca UTF-8
             fputs($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['No. Transaksi', 'Jenis', 'Tanggal', 'Nama Barang', 'Merk', 'Quantity', 'Satuan', 'No. Lot', 'Operator', 'Keterangan']);
+            $sep = ';';
+            fputcsv($file, ['No. Transaksi', 'Jenis', 'Tanggal', 'Nama Barang', 'Merk', 'Quantity', 'Satuan', 'No. Lot', 'Operator', 'Keterangan'], $sep);
             foreach ($transaksis as $t) {
                 fputcsv($file, [
                     $t->no_transaksi,
@@ -142,7 +188,7 @@ class LaporanController extends Controller
                     $t->nomor_lot ?? '-',
                     $t->user->username,
                     $t->keterangan ?? '',
-                ]);
+                ], $sep);
             }
             fclose($file);
         };
