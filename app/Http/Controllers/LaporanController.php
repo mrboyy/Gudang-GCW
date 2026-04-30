@@ -110,6 +110,29 @@ class LaporanController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function printStok(Request $request)
+    {
+        $query = Barang::with(['stoks' => fn($q) => $q->where('stok_akhir', '>', 0)->orderBy('nomor_lot')])
+                       ->where('is_active', true)
+                       ->whereHas('stoks', fn($q) => $q->where('stok_akhir', '>', 0))
+                       ->orderBy('nama_barang');
+        if ($request->search) $query->where(fn($q) => $q->where('nama_barang','like',"%{$request->search}%")->orWhere('merk','like',"%{$request->search}%"));
+        if ($request->merk) $query->where('merk', $request->merk);
+        $barangs = $query->get();
+        return view('laporan.print-stok', compact('barangs'));
+    }
+
+    public function printTransaksi(Request $request)
+    {
+        $tanggalDari   = $request->tanggal_dari ?? \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d');
+        $tanggalSampai = $request->tanggal_sampai ?? \Carbon\Carbon::now()->format('Y-m-d');
+        $query = Transaksi::with(['barang', 'user'])->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+        if ($request->jenis_transaksi) $query->where('jenis_transaksi', $request->jenis_transaksi);
+        if ($request->merk) $query->whereHas('barang', fn($q) => $q->where('merk','like',"%{$request->merk}%"));
+        $transaksis = $query->orderByDesc('tanggal')->orderByDesc('id')->get();
+        return view('laporan.print-transaksi', compact('transaksis', 'tanggalDari', 'tanggalSampai'));
+    }
+
     public function transaksi(Request $request)
     {
         if ($request->periode === 'hari') {

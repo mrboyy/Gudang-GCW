@@ -9,9 +9,14 @@
         <h4>Laporan Transaksi</h4>
         <p>Riwayat seluruh transaksi barang masuk, keluar, dan retur.</p>
     </div>
-    <a href="{{ route('laporan.export-excel', request()->all()) }}" class="btn btn-success">
-        <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('laporan.export-excel', request()->all()) }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+        </a>
+        <a href="{{ route('laporan.print-transaksi', request()->only(['tanggal_dari','tanggal_sampai','jenis_transaksi','merk'])) }}" target="_blank" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Cetak PDF
+        </a>
+    </div>
 </div>
 
 {{-- Summary strip --}}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Barang;
 use App\Models\Transaksi;
 use App\Models\Stok;
@@ -56,18 +57,22 @@ class TransaksiController extends Controller
         $barang = Barang::where('id', $request->id_barang)->where('is_active', true)->firstOrFail();
         $jenis  = $request->jenis_transaksi;
 
-        if ($jenis === 'keluar') {
-            $stokQuery = Stok::where('id_barang', $barang->id);
-            if ($request->nomor_lot) {
-                $stokQuery->where('nomor_lot', $request->nomor_lot);
-            }
-            $stokTotal = $stokQuery->sum('stok_akhir');
-            if ($stokTotal < $request->quantity) {
-                return back()->withErrors(['quantity' => "Stok tidak mencukupi. Stok tersedia: {$stokTotal} {$barang->satuan}"])->withInput();
-            }
-        }
+        $stokError = null;
 
-        DB::transaction(function () use ($request, $barang, $jenis) {
+        DB::transaction(function () use ($request, $barang, $jenis, &$stokError) {
+            // Validasi stok di dalam transaksi dengan lock agar tidak ada race condition
+            if ($jenis === 'keluar') {
+                $stokQuery = Stok::where('id_barang', $barang->id)->lockForUpdate();
+                if ($request->nomor_lot) {
+                    $stokQuery->where('nomor_lot', $request->nomor_lot);
+                }
+                $stokTotal = $stokQuery->sum('stok_akhir');
+                if ($stokTotal < $request->quantity) {
+                    $stokError = "Stok tidak mencukupi. Stok tersedia: {$stokTotal} {$barang->satuan}";
+                    return; // rollback otomatis saat exception — tapi kita return dulu
+                }
+            }
+
             $prefixMap   = ['masuk' => 'BM', 'keluar' => 'BK', 'retur_customer' => 'RC', 'retur_produksi' => 'RP'];
             $prefix      = $prefixMap[$jenis];
             $today       = now()->format('Ymd');
@@ -91,6 +96,25 @@ class TransaksiController extends Controller
             $barang->updateStok($stokJenis, $request->quantity, $request->nomor_lot ?: null);
         });
 
+        if ($stokError) {
+            return back()->withErrors(['quantity' => $stokError])->withInput();
+        }
+
+        // Log setelah transaction selesai
+        $saved = Transaksi::where('id_barang', $barang->id)
+            ->where('jenis_transaksi', $jenis)
+            ->latest()->first();
+        if ($saved) {
+            $jenisLabel = ['masuk'=>'Barang Masuk','keluar'=>'Barang Keluar','retur_customer'=>'Retur Customer','retur_produksi'=>'Retur Produksi'][$jenis] ?? $jenis;
+            AuditLog::log('create', "Catat {$jenisLabel}: {$barang->nama_barang} — {$saved->quantity} {$barang->satuan} [{$saved->no_transaksi}]", $saved, [], [
+                'no_transaksi'    => $saved->no_transaksi,
+                'jenis_transaksi' => $jenis,
+                'barang'          => $barang->nama_barang,
+                'quantity'        => $saved->quantity,
+                'nomor_lot'       => $saved->nomor_lot,
+            ]);
+        }
+
         $routeMap = [
             'masuk'          => 'transaksi.masuk',
             'keluar'         => 'transaksi.keluar',
@@ -104,6 +128,51 @@ class TransaksiController extends Controller
     {
         $transaksi->load(['barang', 'user']);
         return view('transaksi.show', compact('transaksi'));
+    }
+
+    public function printView(Transaksi $transaksi)
+    {
+        $transaksi->load(['barang', 'user', 'voidUser']);
+        return view('transaksi.print', compact('transaksi'));
+    }
+
+    public function void(Request $request, Transaksi $transaksi)
+    {
+        if (!auth()->user()->isAdmin() && !auth()->user()->isKepalaGudang()) {
+            abort(403);
+        }
+
+        if ($transaksi->is_void) {
+            return back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
+        }
+
+        $request->validate([
+            'void_reason' => 'required|string|max:500',
+        ], [
+            'void_reason.required' => 'Alasan pembatalan wajib diisi.',
+        ]);
+
+        DB::transaction(function () use ($request, $transaksi) {
+            $transaksi->barang->reverseStok(
+                $transaksi->jenis_transaksi,
+                $transaksi->quantity,
+                $transaksi->nomor_lot
+            );
+
+            $transaksi->update([
+                'is_void'     => true,
+                'void_by'     => auth()->id(),
+                'void_at'     => now(),
+                'void_reason' => $request->void_reason,
+            ]);
+        });
+
+        AuditLog::log('void', "Void transaksi {$transaksi->no_transaksi}: {$transaksi->barang->nama_barang} — {$request->void_reason}", $transaksi,
+            ['is_void' => false],
+            ['is_void' => true, 'void_reason' => $request->void_reason]
+        );
+
+        return back()->with('success', 'Transaksi berhasil dibatalkan dan stok telah dikoreksi.');
     }
 
     public function masuk(Request $request)

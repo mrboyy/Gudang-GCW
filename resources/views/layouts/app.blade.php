@@ -700,6 +700,32 @@
             .d-flex.align-items-center.gap-3.mb-4 h5 { font-size: 1rem; }
         }
 
+        /* ═══════ NOTIFICATION BELL ═══════ */
+        .btn-notif-bell {
+            position: relative;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 7px;
+            padding: 6px 9px;
+            cursor: pointer;
+            color: #DC2626;
+            font-size: 1rem;
+            transition: all .15s;
+            display: flex; align-items: center;
+        }
+        .btn-notif-bell:hover { background: #FEE2E2; }
+        .notif-count {
+            position: absolute;
+            top: -5px; right: -5px;
+            background: #DC2626; color: #fff;
+            font-size: .6rem; font-weight: 700;
+            min-width: 16px; height: 16px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            border: 1.5px solid #fff;
+        }
+
         @media print {
             .sidebar, .topbar, .mobile-bottom-nav { display: none !important; }
             .main-wrap { margin-left: 0; padding-top: 0; }
@@ -743,6 +769,13 @@
             <i class="bi bi-arrow-counterclockwise"></i> Retur Produksi
         </a>
 
+        @if(auth()->user()->isKepalaGudang())
+        <div class="nav-sep">Stok</div>
+        <a href="{{ route('laporan.stok') }}" class="slink {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-data"></i> Monitor Stok
+        </a>
+        @endif
+
         <div class="nav-sep">Data</div>
         <a href="{{ route('barang.index') }}" class="slink {{ request()->routeIs('barang.*') ? 'active' : '' }}">
             <i class="bi bi-archive"></i> Daftar Barang
@@ -762,6 +795,9 @@
         <div class="nav-sep">Pengaturan</div>
         <a href="{{ route('user.index') }}" class="slink {{ request()->routeIs('user.*') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Kelola Pengguna
+        </a>
+        <a href="{{ route('audit.index') }}" class="slink {{ request()->routeIs('audit.*') ? 'active' : '' }}">
+            <i class="bi bi-clock-history"></i> Audit Log
         </a>
         @endif
     </nav>
@@ -792,6 +828,48 @@
         <i class="bi bi-calendar3"></i>
         {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
     </span>
+
+    @if(auth()->user()->isAdmin() || auth()->user()->isKepalaGudang())
+    @php
+        $stokMinCount = \App\Models\Barang::where('is_active', true)
+            ->whereRaw('stok_minimum >= (SELECT COALESCE(SUM(stok_akhir),0) FROM stoks WHERE id_barang = barangs.id)')
+            ->count();
+    @endphp
+    @if($stokMinCount > 0)
+    <div class="dropdown" style="flex-shrink:0;">
+        <button class="btn-notif-bell" data-bs-toggle="dropdown" aria-expanded="false" title="Stok hampir habis">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notif-count">{{ $stokMinCount }}</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-2" style="min-width:260px;max-width:320px;">
+            <div style="padding:6px 8px 8px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">
+                Stok Hampir Habis
+            </div>
+            @php
+                $barangMin = \App\Models\Barang::where('is_active', true)
+                    ->whereRaw('stok_minimum >= (SELECT COALESCE(SUM(stok_akhir),0) FROM stoks WHERE id_barang = barangs.id)')
+                    ->withSum('stoks as stok_total', 'stok_akhir')
+                    ->orderBy('nama_barang')->limit(8)->get();
+            @endphp
+            @foreach($barangMin as $b)
+            <a href="{{ route('barang.index', ['search' => $b->nama_barang]) }}" class="dropdown-item d-flex justify-content-between align-items-center" style="border-radius:5px;padding:6px 8px;font-size:.82rem;">
+                <span class="text-truncate" style="max-width:180px;">{{ $b->nama_barang }}</span>
+                <span class="badge" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;flex-shrink:0;margin-left:6px;">
+                    {{ $b->stok_total ?? 0 }} {{ $b->satuan }}
+                </span>
+            </a>
+            @endforeach
+            @if($stokMinCount > 8)
+            <div style="padding:4px 8px;font-size:.78rem;color:var(--text-muted);">+{{ $stokMinCount - 8 }} lainnya</div>
+            @endif
+            <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border-soft);">
+                <a href="{{ route('laporan.stok') }}" class="btn btn-sm btn-outline-secondary w-100" style="font-size:.78rem;">Lihat Laporan Stok</a>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endif
+
     {{-- Logout mobile — selalu terlihat di topbar, tidak perlu buka sidebar --}}
     <div class="topbar-user-mobile">
         <div class="tum-avatar">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</div>
@@ -833,6 +911,7 @@
         <i class="bi bi-house"></i>
         <span>Beranda</span>
     </a>
+    @if(auth()->user()->isOperator() || auth()->user()->isAdmin())
     <a href="{{ route('transaksi.create-masuk') }}" class="mbn-item mbn-primary {{ request()->routeIs('transaksi.create-masuk') ? 'active' : '' }}">
         <i class="bi bi-box-arrow-in-down"></i>
         <span>Masuk</span>
@@ -845,17 +924,30 @@
         <i class="bi bi-arrow-return-left"></i>
         <span>Retur</span>
     </a>
+    @endif
+    @if(auth()->user()->isKepalaGudang())
+    <a href="{{ route('laporan.stok') }}" class="mbn-item mbn-primary {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
+        <i class="bi bi-clipboard-data"></i>
+        <span>Stok</span>
+    </a>
+    <a href="{{ route('laporan.transaksi') }}" class="mbn-item {{ request()->routeIs('laporan.transaksi') ? 'active' : '' }}">
+        <i class="bi bi-journal-text"></i>
+        <span>Laporan</span>
+    </a>
+    <a href="{{ route('transaksi.masuk') }}" class="mbn-item {{ request()->routeIs('transaksi.masuk','transaksi.keluar') ? 'active' : '' }}">
+        <i class="bi bi-list-check"></i>
+        <span>Riwayat</span>
+    </a>
+    @endif
     <a href="{{ route('barang.index') }}" class="mbn-item {{ request()->routeIs('barang.*') ? 'active' : '' }}">
         <i class="bi bi-archive"></i>
         <span>Barang</span>
     </a>
-    @if(auth()->user()->isKepalaGudang() || auth()->user()->isAdmin())
+    @if(auth()->user()->isAdmin())
     <a href="{{ route('laporan.transaksi') }}" class="mbn-item {{ request()->routeIs('laporan.*') ? 'active' : '' }}">
         <i class="bi bi-journal-text"></i>
         <span>Laporan</span>
     </a>
-    @endif
-    @if(auth()->user()->isAdmin())
     <a href="{{ route('user.index') }}" class="mbn-item {{ request()->routeIs('user.*') ? 'active' : '' }}">
         <i class="bi bi-people"></i>
         <span>User</span>
@@ -886,5 +978,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @stack('scripts')
+<script>
+// ── Global auto-refresh: berlaku di semua halaman ──────────────────────────
+(function() {
+    var CHECK_URL = '{{ route("api.last-update") }}';
+    var knownTs   = null;
+
+    function isSafePage() {
+        var p = window.location.pathname;
+        return !p.match(/\/(create|edit)(\/|$)/);
+    }
+
+    function check() {
+        if (!isSafePage()) return;
+        fetch(CHECK_URL, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (!data) return;
+                if (knownTs === null) { knownTs = data.ts; return; }
+                if (data.ts > knownTs) { window.location.reload(); }
+            })
+            .catch(function() {});
+    }
+
+    setInterval(check, 8000);
+    check();
+})();
+</script>
 </body>
 </html>

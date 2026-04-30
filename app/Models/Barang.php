@@ -19,23 +19,72 @@ class Barang extends Model
 
     public function updateStok(string $jenis, int $qty, ?string $nomorLot): void
     {
-        $stok = $this->stoks()->where('nomor_lot', $nomorLot)->first();
-
         if ($jenis === 'masuk') {
+            $stok = $this->stoks()->where('nomor_lot', $nomorLot)->lockForUpdate()->first();
             if ($stok) {
                 $stok->increment('stok_akhir', $qty);
                 $stok->update(['tanggal_update' => now()]);
             } else {
                 $this->stoks()->create([
-                    'nomor_lot' => $nomorLot,
-                    'stok_akhir' => $qty,
+                    'nomor_lot'      => $nomorLot,
+                    'stok_akhir'     => $qty,
                     'tanggal_update' => now(),
                 ]);
             }
-        } else {
+            return;
+        }
+
+        // keluar: lot spesifik
+        if ($nomorLot) {
+            $stok = $this->stoks()->where('nomor_lot', $nomorLot)->lockForUpdate()->first();
             if ($stok) {
                 $stok->decrement('stok_akhir', $qty);
                 $stok->update(['tanggal_update' => now()]);
+            }
+            return;
+        }
+
+        // keluar FIFO: named lots first (ascending), null lots last
+        $remaining = $qty;
+        $lots = $this->stoks()
+            ->where('stok_akhir', '>', 0)
+            ->orderByRaw('nomor_lot IS NULL ASC')
+            ->orderBy('nomor_lot')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($lots as $lot) {
+            if ($remaining <= 0) break;
+            $deduct = min($lot->stok_akhir, $remaining);
+            $lot->decrement('stok_akhir', $deduct);
+            $lot->update(['tanggal_update' => now()]);
+            $remaining -= $deduct;
+        }
+    }
+
+    public function reverseStok(string $jenis, int $qty, ?string $nomorLot): void
+    {
+        // masuk/retur menambah stok → reverse: kurangi
+        // keluar mengurangi stok → reverse: tambah
+        $wasIncrease = in_array($jenis, ['masuk', 'retur_customer', 'retur_produksi']);
+
+        if ($wasIncrease) {
+            $stok = $this->stoks()->where('nomor_lot', $nomorLot)->lockForUpdate()->first();
+            if ($stok) {
+                $stok->decrement('stok_akhir', $qty);
+                $stok->update(['tanggal_update' => now()]);
+            }
+        } else {
+            $stok = $this->stoks()->where('nomor_lot', $nomorLot)->lockForUpdate()->first();
+            if ($stok) {
+                $stok->increment('stok_akhir', $qty);
+                $stok->update(['tanggal_update' => now()]);
+            } else {
+                $this->stoks()->create([
+                    'nomor_lot'      => $nomorLot,
+                    'stok_akhir'     => $qty,
+                    'tanggal_update' => now(),
+                ]);
             }
         }
     }

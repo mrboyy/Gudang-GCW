@@ -62,11 +62,14 @@
                 </thead>
                 <tbody>
                     @forelse($transaksis as $t)
-                    <tr>
+                    <tr @if($t->is_void) style="opacity:.5;" @endif>
                         <td>
                             <a href="{{ route('transaksi.show', $t) }}" class="text-decoration-none">
                                 <span class="badge" style="background:var(--warning-soft);color:var(--warning);border:1px solid #FCD34D;">{{ $t->no_transaksi }}</span>
                             </a>
+                            @if($t->is_void)
+                            <span class="badge ms-1" style="background:#FEE2E2;color:#DC2626;font-size:.7rem;">Batal</span>
+                            @endif
                         </td>
                         <td>{{ $t->tanggal->format('d/m/Y') }}</td>
                         <td class="fw-semibold">{{ $t->barang->nama_barang }}</td>

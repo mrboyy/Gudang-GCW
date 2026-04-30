@@ -27,25 +27,55 @@
 <div class="mb-4">
     <div class="nav-sep-page">Aksi Cepat</div>
     <div class="row g-3">
+        @if(auth()->user()->isOperator() || auth()->user()->isAdmin())
         <div class="col-6 col-md-3">
             <a href="{{ route('transaksi.create-masuk') }}" class="btn-action w-100">
                 <div class="ba-icon" style="background:#ECFDF5;color:#059669;"><i class="bi bi-box-arrow-in-down"></i></div>
-                <span>Barang Masuk</span>
+                <span>Catat Masuk</span>
             </a>
         </div>
         <div class="col-6 col-md-3">
             <a href="{{ route('transaksi.create-keluar') }}" class="btn-action w-100">
                 <div class="ba-icon" style="background:#FFF4E8;color:#E8751A;"><i class="bi bi-box-arrow-up"></i></div>
-                <span>Barang Keluar</span>
+                <span>Catat Keluar</span>
             </a>
         </div>
+        @endif
+
+        @if(auth()->user()->isKepalaGudang())
+        <div class="col-6 col-md-3">
+            <a href="{{ route('laporan.stok') }}" class="btn-action w-100">
+                <div class="ba-icon" style="background:#ECFDF5;color:#059669;"><i class="bi bi-clipboard-data"></i></div>
+                <span>Monitor Stok</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{{ route('laporan.transaksi') }}" class="btn-action w-100">
+                <div class="ba-icon" style="background:#EFF6FF;color:#2563EB;"><i class="bi bi-journal-text"></i></div>
+                <span>Laporan Transaksi</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{{ route('transaksi.masuk') }}" class="btn-action w-100">
+                <div class="ba-icon" style="background:#F3F4F6;color:#4B5563;"><i class="bi bi-list-check"></i></div>
+                <span>Riwayat Masuk</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{{ route('transaksi.keluar') }}" class="btn-action w-100">
+                <div class="ba-icon" style="background:#FFF4E8;color:#D97706;"><i class="bi bi-list-check"></i></div>
+                <span>Riwayat Keluar</span>
+            </a>
+        </div>
+        @endif
+
         <div class="col-6 col-md-3">
             <a href="{{ route('barang.index') }}" class="btn-action w-100">
                 <div class="ba-icon" style="background:#F3F4F6;color:#4B5563;"><i class="bi bi-archive"></i></div>
                 <span>Daftar Barang</span>
             </a>
         </div>
-        @if(auth()->user()->isKepalaGudang() || auth()->user()->isAdmin())
+        @if(auth()->user()->isAdmin())
         <div class="col-6 col-md-3">
             <a href="{{ route('laporan.transaksi') }}" class="btn-action w-100">
                 <div class="ba-icon" style="background:#EFF6FF;color:#2563EB;"><i class="bi bi-journal-text"></i></div>
@@ -65,7 +95,7 @@
                 <div class="s-icon" style="background:#F3F4F6;color:#4B5563;"><i class="bi bi-archive-fill"></i></div>
                 <div>
                     <div class="s-label">Jenis Barang</div>
-                    <div class="s-num">{{ $stats['total_barang'] }}</div>
+                    <div class="s-num" id="stat-total-barang">{{ $stats['total_barang'] }}</div>
                 </div>
             </div>
         </div>
@@ -76,7 +106,7 @@
                 <div class="s-icon" style="background:#ECFDF5;color:#059669;"><i class="bi bi-box-arrow-in-down"></i></div>
                 <div>
                     <div class="s-label">Masuk Hari Ini</div>
-                    <div class="s-num" style="color:#059669;">{{ $stats['masuk_hari_ini'] }}</div>
+                    <div class="s-num" id="stat-masuk-hari" style="color:#059669;">{{ $stats['masuk_hari_ini'] }}</div>
                 </div>
             </div>
         </div>
@@ -87,7 +117,7 @@
                 <div class="s-icon" style="background:#FFF4E8;color:#E8751A;"><i class="bi bi-box-arrow-up"></i></div>
                 <div>
                     <div class="s-label">Keluar Hari Ini</div>
-                    <div class="s-num" style="color:#E8751A;">{{ $stats['keluar_hari_ini'] }}</div>
+                    <div class="s-num" id="stat-keluar-hari" style="color:#E8751A;">{{ $stats['keluar_hari_ini'] }}</div>
                 </div>
             </div>
         </div>
@@ -99,7 +129,7 @@
                 <div class="s-icon" style="background:#FEF2F2;color:#DC2626;"><i class="bi bi-exclamation-triangle-fill"></i></div>
                 <div>
                     <div class="s-label">Stok Hampir Habis</div>
-                    <div class="s-num" style="color:{{ $stats['stok_minimum'] > 0 ? '#DC2626' : 'var(--text)' }};">{{ $stats['stok_minimum'] }}</div>
+                    <div class="s-num" id="stat-stok-min" style="color:{{ $stats['stok_minimum'] > 0 ? '#DC2626' : 'var(--text)' }};">{{ $stats['stok_minimum'] }}</div>
                 </div>
             </div>
         </div>
@@ -133,7 +163,7 @@
             <div class="card-body p-0">
                 <table class="table mb-0">
                     <thead><tr><th>No. Transaksi</th><th>Barang</th><th class="text-end">Qty</th><th>Tanggal</th></tr></thead>
-                    <tbody>
+                    <tbody id="tbody-masuk">
                         @forelse($recentMasuk as $t)
                         <tr>
                             <td><span class="badge badge-masuk">{{ $t->no_transaksi }}</span></td>
@@ -158,7 +188,7 @@
             <div class="card-body p-0">
                 <table class="table mb-0">
                     <thead><tr><th>No. Transaksi</th><th>Barang</th><th class="text-end">Qty</th><th>Tanggal</th></tr></thead>
-                    <tbody>
+                    <tbody id="tbody-keluar">
                         @forelse($recentKeluar as $t)
                         <tr>
                             <td><span class="badge badge-keluar">{{ $t->no_transaksi }}</span></td>
@@ -186,12 +216,14 @@
     color: var(--text-subtle);
     margin-bottom: 10px;
 }
+
 </style>
 @endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// ── Chart ──────────────────────────────────────────────────────────────────
 (function() {
     const labels  = @json($chartLabels);
     const masuk   = @json($chartMasuk);

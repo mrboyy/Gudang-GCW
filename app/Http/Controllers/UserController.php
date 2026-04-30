@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,13 +28,16 @@ class UserController extends Controller
             'role'     => 'required|in:admin,kepala_gudang,operator',
         ]);
 
-        User::create([
+        $user = User::create([
             'username'  => $request->username,
             'password'  => Hash::make($request->password),
             'role'      => $request->role,
             'is_active' => $request->boolean('is_active', true),
         ]);
-
+        AuditLog::log('create', "Tambah user: {$user->username} ({$user->role})", $user, [], [
+            'username' => $user->username,
+            'role'     => $user->role,
+        ]);
         return redirect()->route('user.index')->with('success', 'Pengguna berhasil ditambahkan');
     }
 
@@ -60,13 +64,16 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
+        $old = $user->only(['username','role','is_active']);
         $user->update($data);
+        AuditLog::log('update', "Ubah user: {$user->username}", $user, $old, $user->only(['username','role','is_active']));
         return redirect()->route('user.index')->with('success', 'Pengguna berhasil diperbarui');
     }
 
     public function destroy(User $user)
     {
         $user->update(['is_active' => false]);
+        AuditLog::log('delete', "Nonaktifkan user: {$user->username}", $user, ['is_active' => true], ['is_active' => false]);
         return redirect()->route('user.index')->with('success', 'Pengguna berhasil dinonaktifkan');
     }
 }

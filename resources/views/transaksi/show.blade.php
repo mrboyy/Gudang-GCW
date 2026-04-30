@@ -31,6 +31,36 @@
 <div class="row justify-content-center">
 <div class="col-12 col-lg-7 col-xl-6">
 
+@if(session('success'))
+<div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+    <span>{{ session('success') }}</span>
+</div>
+@endif
+@if(session('error'))
+<div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+    <span>{{ session('error') }}</span>
+</div>
+@endif
+
+@if($transaksi->is_void)
+<div class="alert alert-danger d-flex align-items-start gap-2 mb-3" style="border-left:4px solid #DC2626;">
+    <i class="bi bi-slash-circle-fill fs-5 flex-shrink-0 mt-1"></i>
+    <div>
+        <div class="fw-bold mb-1">Transaksi Dibatalkan</div>
+        <div style="font-size:.85rem;">
+            @if($transaksi->voidUser)
+            Oleh <strong>{{ $transaksi->voidUser->username }}</strong> pada {{ $transaksi->void_at->format('d/m/Y H:i') }}
+            @endif
+            @if($transaksi->void_reason)
+            <div class="mt-1 text-muted">Alasan: {{ $transaksi->void_reason }}</div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="d-flex align-items-center gap-3 mb-4">
     <a href="{{ $backRoute }}" class="btn btn-sm btn-outline-secondary" title="Kembali">
         <i class="bi bi-arrow-left"></i>
@@ -39,12 +69,18 @@
         <h5 class="fw-bold mb-0" style="letter-spacing:-.02em;color:var(--text);">Detail Transaksi</h5>
         <div class="text-muted" style="font-size:.78rem;">{{ $transaksi->no_transaksi }}</div>
     </div>
+    @if($transaksi->is_void)
+    <span class="badge px-3 py-2" style="font-size:.82rem;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;">
+        <i class="bi bi-slash-circle me-1"></i>Dibatalkan
+    </span>
+    @else
     <span class="badge px-3 py-2" style="font-size:.82rem;background:{{ $badgeBg }};color:{{ $badgeClr }};border:1px solid {{ $badgeBdr }};">
         <i class="bi bi-{{ $badgeIcon }} me-1"></i>{{ $badgeTxt }}
     </span>
-    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary" title="Cetak">
+    @endif
+    <a href="{{ route('transaksi.print', $transaksi) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Cetak / Simpan PDF">
         <i class="bi bi-printer"></i>
-    </button>
+    </a>
 </div>
 
 <div class="card">
@@ -84,8 +120,58 @@
     </div>
 </div>
 
+@if(!$transaksi->is_void && (auth()->user()->isAdmin() || auth()->user()->isKepalaGudang()))
+<div class="mt-3 text-end">
+    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#voidModal">
+        <i class="bi bi-slash-circle me-1"></i>Batalkan Transaksi
+    </button>
+</div>
+@endif
+
 </div>
 </div>
+
+{{-- Modal Konfirmasi Void --}}
+@if(!$transaksi->is_void && (auth()->user()->isAdmin() || auth()->user()->isKepalaGudang()))
+<div class="modal fade" id="voidModal" tabindex="-1" aria-labelledby="voidModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold" id="voidModalLabel">
+                    <i class="bi bi-slash-circle me-2 text-danger"></i>Batalkan Transaksi
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('transaksi.void', $transaksi) }}">
+                @csrf
+                <div class="modal-body pt-2">
+                    <p class="text-muted" style="font-size:.88rem;">
+                        Transaksi <strong>{{ $transaksi->no_transaksi }}</strong> akan dibatalkan.
+                        Stok akan dikoreksi otomatis. Tindakan ini tidak dapat diurungkan.
+                    </p>
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold" style="font-size:.88rem;">
+                            Alasan pembatalan <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="void_reason" class="form-control form-control-sm @error('void_reason') is-invalid @enderror"
+                            rows="3" required maxlength="500"
+                            placeholder="Contoh: Salah input quantity, duplikasi transaksi...">{{ old('void_reason') }}</textarea>
+                        @error('void_reason')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-slash-circle me-1"></i>Konfirmasi Pembatalan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 
 @push('styles')
 <style>

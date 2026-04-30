@@ -11,11 +11,11 @@
     </div>
     <div class="d-flex gap-2">
         <a href="{{ route('laporan.export-stok', request()->only(['search','merk','group_by'])) }}" class="btn btn-success">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export Excel
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
         </a>
-        <button onclick="window.print()" class="btn btn-outline-secondary">
-            <i class="bi bi-printer me-2"></i>Cetak
-        </button>
+        <a href="{{ route('laporan.print-stok', request()->only(['search','merk'])) }}" target="_blank" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Cetak PDF
+        </a>
     </div>
 </div>
 

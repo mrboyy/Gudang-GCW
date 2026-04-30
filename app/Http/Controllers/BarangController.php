@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Barang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -57,7 +58,14 @@ class BarangController extends Controller
             $data['foto'] = $name;
         }
 
-        Barang::create($data);
+        $barang = Barang::create($data);
+        AuditLog::log('create', "Tambah barang: {$barang->nama_barang} ({$barang->kode_barang})", $barang, [], [
+            'nama_barang'  => $barang->nama_barang,
+            'kode_barang'  => $barang->kode_barang,
+            'merk'         => $barang->merk,
+            'satuan'       => $barang->satuan,
+            'stok_minimum' => $barang->stok_minimum,
+        ]);
         return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan');
     }
 
@@ -102,13 +110,21 @@ class BarangController extends Controller
             $data['foto'] = $name;
         }
 
+        $old = $barang->only(['nama_barang','kode_barang','merk','satuan','stok_minimum','is_active']);
         $barang->update($data);
+        AuditLog::log('update', "Ubah barang: {$barang->nama_barang} ({$barang->kode_barang})", $barang,
+            $old,
+            $barang->only(['nama_barang','kode_barang','merk','satuan','stok_minimum','is_active'])
+        );
         return redirect()->route('barang.index')->with('success', 'Barang berhasil diperbarui');
     }
 
     public function destroy(Barang $barang)
     {
         $barang->update(['is_active' => false]);
+        AuditLog::log('delete', "Nonaktifkan barang: {$barang->nama_barang} ({$barang->kode_barang})", $barang,
+            ['is_active' => true], ['is_active' => false]
+        );
         return redirect()->route('barang.index')->with('success', 'Barang berhasil dinonaktifkan');
     }
 }

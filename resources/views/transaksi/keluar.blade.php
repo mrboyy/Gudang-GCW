@@ -61,12 +61,17 @@
                 </thead>
                 <tbody>
                     @forelse($transaksis as $t)
-                    <tr>
-                        <td><span class="badge badge-keluar">{{ $t->no_transaksi }}</span></td>
+                    <tr @if($t->is_void) style="opacity:.5;" @endif>
+                        <td>
+                            <span class="badge badge-keluar">{{ $t->no_transaksi }}</span>
+                            @if($t->is_void)
+                            <span class="badge ms-1" style="background:#FEE2E2;color:#DC2626;font-size:.7rem;">Batal</span>
+                            @endif
+                        </td>
                         <td>{{ $t->tanggal->format('d/m/Y') }}</td>
                         <td class="fw-semibold">{{ $t->barang->nama_barang }}</td>
                         <td>{{ $t->nomor_lot ?: '—' }}</td>
-                        <td class="text-end fw-semibold" style="color:var(--danger);">
+                        <td class="text-end fw-semibold" style="color:{{ $t->is_void ? 'var(--text-muted)' : 'var(--danger)' }};">
                             {{ $t->quantity }} <small class="text-muted fw-normal">{{ $t->barang->satuan }}</small>
                         </td>
                         <td class="text-end">
