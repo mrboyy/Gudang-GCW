@@ -42,7 +42,7 @@ class AuthController extends Controller
             'description' => 'Percobaan login gagal untuk username: ' . $request->username,
             'ip_address'  => $request->ip(),
             'old_values'  => null,
-            'new_values'  => json_encode(['username' => $request->username]),
+            'new_values'  => ['username' => $request->username],
         ]);
 
         return back()->withErrors(['username' => 'Username atau password salah. Periksa kembali dan coba lagi.'])->withInput($request->except('password'));
