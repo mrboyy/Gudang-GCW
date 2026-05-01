@@ -10,7 +10,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['username', 'password', 'role', 'is_active'];
+    protected $fillable = ['username', 'email', 'password', 'role', 'is_active'];
     protected $hidden = ['password', 'remember_token'];
     protected $casts = ['is_active' => 'boolean'];
 
@@ -20,12 +20,10 @@ class User extends Authenticatable
 
     /**
      * Route notifications for the mail channel.
-     * Username digunakan sebagai alamat email karena kolom email tidak ada di tabel users.
-     * Ganti dengan kolom email nyata jika tersedia.
      */
-    public function routeNotificationForMail(): string
+    public function routeNotificationForMail(): ?string
     {
-        return $this->username;
+        return $this->email;
     }
 
     public function transaksis() { return $this->hasMany(Transaksi::class, 'id_user'); }

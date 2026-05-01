@@ -43,6 +43,13 @@
         </div>
 
         <div class="mb-3">
+            <label class="form-label">Email <span class="text-muted small">(opsional, untuk notifikasi)</span></label>
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                   value="{{ old('email', $user->email ?? '') }}" placeholder="admin@perusahaan.com">
+            @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Role <span class="text-danger">*</span></label>
             <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                 <option value="operator" {{ old('role', $user->role) === 'operator' ? 'selected' : '' }}>Operator</option>

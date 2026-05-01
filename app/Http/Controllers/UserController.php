@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -24,6 +25,7 @@ class UserController extends Controller
     {
         $request->validate([
             'username' => 'required|unique:users,username',
+            'email'    => ['nullable', 'email', 'unique:users,email'],
             'password' => ['required', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
             'role'     => 'required|in:admin,kepala_gudang,operator',
         ], [
@@ -33,6 +35,7 @@ class UserController extends Controller
 
         $user = User::create([
             'username'  => $request->username,
+            'email'     => $request->email ?: null,
             'password'  => Hash::make($request->password),
             'role'      => $request->role,
             'is_active' => $request->boolean('is_active', true),
@@ -53,6 +56,7 @@ class UserController extends Controller
     {
         $request->validate([
             'username' => 'required|unique:users,username,' . $user->id,
+            'email'    => ['nullable', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'role'     => 'required|in:admin,kepala_gudang,operator',
             'password' => ['nullable', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
         ], [
@@ -62,6 +66,7 @@ class UserController extends Controller
 
         $data = [
             'username'  => $request->username,
+            'email'     => $request->email ?: null,
             'role'      => $request->role,
             'is_active' => $request->boolean('is_active'),
         ];
