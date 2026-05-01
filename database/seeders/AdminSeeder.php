@@ -13,9 +13,8 @@ class AdminSeeder extends Seeder
         User::firstOrCreate(
             ['username' => 'admin'],
             [
-                'username' => 'admin',
-                'password' => Hash::make('Admin@1234'),
-                'role'     => 'admin',
+                'password'  => Hash::make('Admin@1234'),
+                'role'      => 'admin',
                 'is_active' => true,
             ]
         );
