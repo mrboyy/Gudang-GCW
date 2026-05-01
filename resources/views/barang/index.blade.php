@@ -14,9 +14,6 @@
     </a>
 </div>
 
-@if(session('success'))
-<div class="alert alert-success mb-3">{{ session('success') }}</div>
-@endif
 
 <div class="card mb-3">
     <div class="card-body py-3">
@@ -105,7 +102,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form action="{{ route('barang.destroy', $barang) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Nonaktifkan barang {{ $barang->nama_barang }}?')">
+                                      onsubmit="return confirm('Nonaktifkan barang {{ addslashes(e($barang->nama_barang)) }}?')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger" {{ !$barang->is_active ? 'disabled' : '' }}>
                                         <i class="bi bi-slash-circle"></i>
