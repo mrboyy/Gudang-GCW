@@ -2,6 +2,10 @@
 @section('title', 'Detail Transaksi')
 @section('page-title', 'Detail Transaksi')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item active" aria-current="page">Detail Transaksi</li>
+@endsection
+
 @section('content')
 @php
     $jenis            = $transaksi->jenis_transaksi;

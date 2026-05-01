@@ -2,6 +2,10 @@
 @section('title', 'Audit Log')
 @section('page-title', 'Audit Log')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item active" aria-current="page">Audit Log</li>
+@endsection
+
 @section('content')
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">

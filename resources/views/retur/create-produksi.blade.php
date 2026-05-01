@@ -2,6 +2,11 @@
 @section('title', 'Catat Retur Produksi')
 @section('page-title', 'Retur Produksi')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('retur.produksi.index') }}">Retur Produksi</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Input Retur</li>
+@endsection
+
 @section('content')
 <div class="row justify-content-center">
 <div class="col-12 col-lg-7 col-xl-6">

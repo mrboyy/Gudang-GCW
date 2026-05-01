@@ -2,6 +2,10 @@
 @section('title', 'Kelola Pengguna')
 @section('page-title', 'Kelola Pengguna')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item active" aria-current="page">Kelola User</li>
+@endsection
+
 @section('content')
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">

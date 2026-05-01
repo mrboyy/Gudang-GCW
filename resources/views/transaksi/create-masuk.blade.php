@@ -2,6 +2,11 @@
 @section('title', 'Input Barang Masuk')
 @section('page-title', 'Input Barang Masuk')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('transaksi.masuk') }}">Barang Masuk</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Input Masuk</li>
+@endsection
+
 @section('content')
 <div class="row justify-content-center">
 <div class="col-12 col-lg-7 col-xl-6">

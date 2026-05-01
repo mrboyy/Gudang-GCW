@@ -2,6 +2,11 @@
 @section('title', 'Tambah Barang')
 @section('page-title', 'Tambah Barang')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('barang.index') }}">Data Barang</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Tambah Barang</li>
+@endsection
+
 @section('content')
 <div class="row justify-content-center">
 <div class="col-12 col-lg-7 col-xl-6">

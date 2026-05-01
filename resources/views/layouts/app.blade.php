@@ -901,6 +901,17 @@
         </div>
         @endif
 
+        @hasSection('breadcrumb')
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                </li>
+                @yield('breadcrumb')
+            </ol>
+        </nav>
+        @endif
+
         @yield('content')
     </div>
 </div>
