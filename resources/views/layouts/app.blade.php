@@ -986,6 +986,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 12000);
         });
     });
+
+    // Search debounce
+    document.querySelectorAll('input[name="search"]').forEach(function(input) {
+        let timer;
+        input.addEventListener('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                input.closest('form').submit();
+            }, 500);
+        });
+    });
 });
 </script>
 @stack('scripts')
