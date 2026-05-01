@@ -24,8 +24,11 @@ class UserController extends Controller
     {
         $request->validate([
             'username' => 'required|unique:users,username',
-            'password' => 'required|min:6|confirmed',
+            'password' => ['required', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
             'role'     => 'required|in:admin,kepala_gudang,operator',
+        ], [
+            'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, dan angka.',
+            'password.min'   => 'Password minimal 8 karakter.',
         ]);
 
         $user = User::create([
@@ -51,7 +54,10 @@ class UserController extends Controller
         $request->validate([
             'username' => 'required|unique:users,username,' . $user->id,
             'role'     => 'required|in:admin,kepala_gudang,operator',
-            'password' => 'nullable|min:6|confirmed',
+            'password' => ['nullable', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
+        ], [
+            'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, dan angka.',
+            'password.min'   => 'Password minimal 8 karakter.',
         ]);
 
         $data = [

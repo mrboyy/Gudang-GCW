@@ -59,6 +59,7 @@
                    class="form-control @error('password') is-invalid @enderror"
                    required autocomplete="new-password">
             @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div class="form-text text-muted">Minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.</div>
         </div>
 
         <div class="mb-3">

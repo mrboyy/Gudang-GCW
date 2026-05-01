@@ -34,6 +34,17 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
+        \App\Models\AuditLog::create([
+            'user_id'     => null,
+            'action'      => 'failed_login',
+            'model_type'  => 'User',
+            'model_id'    => null,
+            'description' => 'Percobaan login gagal untuk username: ' . $request->username,
+            'ip_address'  => $request->ip(),
+            'old_values'  => null,
+            'new_values'  => json_encode(['username' => $request->username]),
+        ]);
+
         return back()->withErrors(['username' => 'Username atau password salah. Periksa kembali dan coba lagi.'])->withInput($request->except('password'));
     }
 
