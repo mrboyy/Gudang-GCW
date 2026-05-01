@@ -18,7 +18,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Dashboard — semua role
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/live', [DashboardController::class, 'live'])->name('dashboard.live');
     Route::get('/api/last-update', [DashboardController::class, 'lastUpdate'])->name('api.last-update');
 
     // ── TRANSAKSI LIST & SHOW — semua role (monitoring) ──

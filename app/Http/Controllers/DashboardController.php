@@ -56,38 +56,4 @@ class DashboardController extends Controller
         return response()->json(['ts' => $ts ? strtotime($ts) : 0]);
     }
 
-    public function live()
-    {
-        $today          = Carbon::today();
-        $stokMinimumSub = DB::raw('(SELECT COALESCE(SUM(stok_akhir), 0) FROM stoks WHERE id_barang = barangs.id)');
-
-        $stats = [
-            'total_barang'    => Barang::where('is_active', true)->count(),
-            'masuk_hari_ini'  => Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->whereDate('tanggal', $today)->count(),
-            'keluar_hari_ini' => Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->whereDate('tanggal', $today)->count(),
-            'stok_minimum'    => Barang::where('is_active', true)->whereColumn('stok_minimum', '>=', $stokMinimumSub)->count(),
-        ];
-
-        $recentMasuk = Transaksi::with('barang')
-            ->where('jenis_transaksi', 'masuk')->where('is_void', false)
-            ->orderByDesc('created_at')->limit(5)->get()
-            ->map(fn($t) => [
-                'no_transaksi' => $t->no_transaksi,
-                'nama_barang'  => $t->barang->nama_barang,
-                'quantity'     => $t->quantity,
-                'tanggal'      => $t->tanggal->format('d/m/Y'),
-            ]);
-
-        $recentKeluar = Transaksi::with('barang')
-            ->where('jenis_transaksi', 'keluar')->where('is_void', false)
-            ->orderByDesc('created_at')->limit(5)->get()
-            ->map(fn($t) => [
-                'no_transaksi' => $t->no_transaksi,
-                'nama_barang'  => $t->barang->nama_barang,
-                'quantity'     => $t->quantity,
-                'tanggal'      => $t->tanggal->format('d/m/Y'),
-            ]);
-
-        return response()->json(compact('stats', 'recentMasuk', 'recentKeluar'));
-    }
 }

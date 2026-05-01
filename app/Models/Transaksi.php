@@ -22,10 +22,4 @@ class Transaksi extends Model
     public function user() { return $this->belongsTo(User::class, 'id_user'); }
     public function voidUser() { return $this->belongsTo(User::class, 'void_by'); }
 
-    public function create_no_transaksi(string $jenis): string
-    {
-        $prefix = $jenis === 'masuk' ? 'BM' : 'BK';
-        $count = self::whereDate('created_at', today())->where('jenis_transaksi', $jenis)->count() + 1;
-        return $prefix . '-' . now()->format('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
-    }
 }
