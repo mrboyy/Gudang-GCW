@@ -7,6 +7,7 @@ use App\Models\Barang;
 use App\Models\Transaksi;
 use App\Models\Stok;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TransaksiController extends Controller
@@ -115,6 +116,8 @@ class TransaksiController extends Controller
             ]);
         }
 
+        Cache::forget('dashboard_stats');
+
         $routeMap = [
             'masuk'          => 'transaksi.masuk',
             'keluar'         => 'transaksi.keluar',
@@ -171,6 +174,8 @@ class TransaksiController extends Controller
             ['is_void' => false],
             ['is_void' => true, 'void_reason' => $request->void_reason]
         );
+
+        Cache::forget('dashboard_stats');
 
         return back()->with('success', 'Transaksi berhasil dibatalkan dan stok telah dikoreksi.');
     }

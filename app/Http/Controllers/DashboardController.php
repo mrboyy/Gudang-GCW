@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\Transaksi;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -16,14 +17,16 @@ class DashboardController extends Controller
 
         $stokMinimumSub = DB::raw('(SELECT COALESCE(SUM(stok_akhir), 0) FROM stoks WHERE id_barang = barangs.id)');
 
-        $stats = [
-            'total_barang'    => Barang::where('is_active', true)->count(),
-            'masuk_hari_ini'  => Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->whereDate('tanggal', $today)->count(),
-            'keluar_hari_ini' => Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->whereDate('tanggal', $today)->count(),
-            'masuk_bulan_ini' => Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->where('tanggal', '>=', $thisMonth)->count(),
-            'keluar_bulan_ini'=> Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->where('tanggal', '>=', $thisMonth)->count(),
-            'stok_minimum'    => Barang::where('is_active', true)->whereColumn('stok_minimum', '>=', $stokMinimumSub)->count(),
-        ];
+        $stats = Cache::remember('dashboard_stats', 60, function () use ($today, $thisMonth, $stokMinimumSub) {
+            return [
+                'total_barang'    => Barang::where('is_active', true)->count(),
+                'masuk_hari_ini'  => Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->whereDate('tanggal', $today)->count(),
+                'keluar_hari_ini' => Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->whereDate('tanggal', $today)->count(),
+                'masuk_bulan_ini' => Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->where('tanggal', '>=', $thisMonth)->count(),
+                'keluar_bulan_ini'=> Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->where('tanggal', '>=', $thisMonth)->count(),
+                'stok_minimum'    => Barang::where('is_active', true)->whereColumn('stok_minimum', '>=', $stokMinimumSub)->count(),
+            ];
+        });
 
         $recentMasuk  = Transaksi::with(['barang', 'user'])->where('jenis_transaksi', 'masuk')->where('is_void', false)->orderByDesc('created_at')->limit(5)->get();
         $recentKeluar = Transaksi::with(['barang', 'user'])->where('jenis_transaksi', 'keluar')->where('is_void', false)->orderByDesc('created_at')->limit(5)->get();
