@@ -138,16 +138,12 @@
 </div>
 
 {{-- CHART --}}
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-bar-chart-line me-2" style="color:var(--brand);"></i>Aktivitas 7 Hari Terakhir</span>
-        <div class="d-flex align-items-center gap-3" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">
-            <span><span style="display:inline-block;width:10px;height:10px;background:#059669;border-radius:2px;margin-right:4px;"></span>Masuk</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:#E8751A;border-radius:2px;margin-right:4px;"></span>Keluar</span>
-        </div>
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <span class="fw-semibold">Transaksi 7 Hari Terakhir</span>
     </div>
-    <div class="card-body" style="padding:18px 20px;">
-        <canvas id="activityChart" height="90"></canvas>
+    <div class="card-body">
+        <canvas id="transaksiChart" height="100"></canvas>
     </div>
 </div>
 
@@ -223,68 +219,34 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// ── Chart ──────────────────────────────────────────────────────────────────
-(function() {
-    const labels  = @json($chartLabels);
-    const masuk   = @json($chartMasuk);
-    const keluar  = @json($chartKeluar);
-
-    const ctx = document.getElementById('activityChart').getContext('2d');
+const ctx = document.getElementById('transaksiChart');
+if (ctx) {
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels,
+            labels: @json($chartLabels),
             datasets: [
                 {
-                    label: 'Masuk',
-                    data: masuk,
-                    backgroundColor: 'rgba(5,150,105,.15)',
-                    borderColor: '#059669',
-                    borderWidth: 1.5,
+                    label: 'Barang Masuk',
+                    data: @json($chartMasuk),
+                    backgroundColor: 'rgba(5, 150, 105, 0.7)',
                     borderRadius: 4,
-                    borderSkipped: false,
                 },
                 {
-                    label: 'Keluar',
-                    data: keluar,
-                    backgroundColor: 'rgba(232,117,26,.15)',
-                    borderColor: '#E8751A',
-                    borderWidth: 1.5,
+                    label: 'Barang Keluar',
+                    data: @json($chartKeluar),
+                    backgroundColor: 'rgba(220, 38, 38, 0.7)',
                     borderRadius: 4,
-                    borderSkipped: false,
                 }
             ]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#111827',
-                    titleColor: '#9CA3AF',
-                    bodyColor: '#F3F4F6',
-                    borderColor: '#1F2937',
-                    borderWidth: 1,
-                    padding: 10,
-                    cornerRadius: 6,
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11 }, color: '#9CA3AF' }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#F0F1F3' },
-                    ticks: { font: { size: 11 }, color: '#9CA3AF', precision: 0 }
-                }
-            }
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
     });
-})();
+}
 </script>
 @endpush
 

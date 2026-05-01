@@ -39,9 +39,9 @@ class DashboardController extends Controller
         $chartKeluar = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $chartLabels[] = $date->locale('id')->isoFormat('ddd D/M');
-            $chartMasuk[]  = Transaksi::where('jenis_transaksi', 'masuk')->where('is_void', false)->whereDate('tanggal', $date)->sum('quantity') ?? 0;
-            $chartKeluar[] = Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->whereDate('tanggal', $date)->sum('quantity') ?? 0;
+            $chartLabels[] = $date->locale('id')->isoFormat('ddd, D MMM');
+            $chartMasuk[]  = Transaksi::whereIn('jenis_transaksi', ['masuk', 'retur_customer', 'retur_produksi'])->where('is_void', false)->whereDate('tanggal', $date)->count();
+            $chartKeluar[] = Transaksi::where('jenis_transaksi', 'keluar')->where('is_void', false)->whereDate('tanggal', $date)->count();
         }
 
         return view('dashboard', compact(
