@@ -50,7 +50,7 @@
             <label class="form-label">Foto Barang</label>
             @if($barang->foto)
             <div class="mb-2" id="fotoLama">
-                <img src="{{ Storage::disk('public')->url($barang->foto) }}" alt="Foto"
+                <img src="{{ Storage::url($barang->foto) }}" alt="Foto"
                      style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--border);object-fit:cover;">
                 <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Foto saat ini. Upload baru untuk mengganti.</div>
             </div>
