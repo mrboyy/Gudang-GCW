@@ -4,16 +4,27 @@ namespace App\Services;
 
 use App\Models\Barang;
 use App\Models\Stok;
-use Illuminate\Support\Facades\DB;
 
 class StokService
 {
     public function tambahStok(Barang $barang, int $qty, ?string $nomorLot): void
     {
-        Stok::updateOrCreate(
-            ['id_barang' => $barang->id, 'nomor_lot' => $nomorLot],
-            ['stok_akhir' => DB::raw("stok_akhir + {$qty}"), 'tanggal_update' => now()]
-        );
+        $stok = Stok::where('id_barang', $barang->id)
+            ->where('nomor_lot', $nomorLot)
+            ->lockForUpdate()
+            ->first();
+
+        if ($stok) {
+            $stok->increment('stok_akhir', $qty);
+            $stok->update(['tanggal_update' => now()]);
+        } else {
+            Stok::create([
+                'id_barang'      => $barang->id,
+                'nomor_lot'      => $nomorLot,
+                'stok_akhir'     => $qty,
+                'tanggal_update' => now(),
+            ]);
+        }
     }
 
     public function kurangiStok(Barang $barang, int $qty, ?string $nomorLot): void

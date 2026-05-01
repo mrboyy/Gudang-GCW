@@ -7,11 +7,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer') NOT NULL");
+        // MySQL-only: alter ENUM column; skip on SQLite (used in testing)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer') NOT NULL");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar') NOT NULL");
+        }
     }
 };

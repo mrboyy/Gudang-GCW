@@ -13,7 +13,10 @@ return new class extends Migration
             $table->string('foto')->nullable()->after('deskripsi');
         });
 
-        DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer','retur_produksi') NOT NULL");
+        // MySQL-only: alter ENUM column; skip on SQLite (used in testing)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer','retur_produksi') NOT NULL");
+        }
     }
 
     public function down(): void
@@ -22,6 +25,8 @@ return new class extends Migration
             $table->dropColumn('foto');
         });
 
-        DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE transaksis MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','retur_customer') NOT NULL");
+        }
     }
 };
