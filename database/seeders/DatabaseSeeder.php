@@ -12,9 +12,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create(['username' => 'admin',    'password' => Hash::make('admin123'),    'role' => 'admin',         'is_active' => true]);
-        User::create(['username' => 'kepala',   'password' => Hash::make('kepala123'),   'role' => 'kepala_gudang', 'is_active' => true]);
-        User::create(['username' => 'operator', 'password' => Hash::make('operator123'), 'role' => 'operator',      'is_active' => true]);
+        $this->call([
+            AdminSeeder::class,
+        ]);
+
+        User::firstOrCreate(['username' => 'kepala'],   ['password' => Hash::make('kepala123'),   'role' => 'kepala_gudang', 'is_active' => true]);
+        User::firstOrCreate(['username' => 'operator'], ['password' => Hash::make('operator123'), 'role' => 'operator',      'is_active' => true]);
 
         $barangs = [
             ['kode_barang' => 'BRG-001', 'nama_barang' => 'Kleenoxide Disinfektan', 'merk' => 'Kleenoxide', 'satuan' => 'Liter',  'stok_minimum' => 10],
