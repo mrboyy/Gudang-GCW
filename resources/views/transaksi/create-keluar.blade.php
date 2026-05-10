@@ -26,7 +26,12 @@
 @endif
 
 <div class="card">
-    <div class="card-header">Data Pengeluaran Barang</div>
+    <div class="card-header d-flex align-items-center gap-2">
+        <span style="width:28px;height:28px;background:#FFF4E8;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#E8751A;font-size:.95rem;flex-shrink:0;">
+            <i class="bi bi-box-arrow-up"></i>
+        </span>
+        Data Pengeluaran Barang
+    </div>
     <form method="POST" action="{{ route('transaksi.store') }}">
     @csrf
     <input type="hidden" name="jenis_transaksi" value="keluar">
@@ -38,7 +43,7 @@
                 <option value="">— Pilih barang —</option>
                 @foreach($barangs as $b)
                 <option value="{{ $b->id }}" data-satuan="{{ $b->satuan }}" {{ old('id_barang') == $b->id ? 'selected' : '' }}>
-                    {{ $b->nama_barang }}{{ $b->merk ? ' — '.$b->merk : '' }}
+                    {{ $b->nama_barang }} ({{ $b->kode_barang }})
                 </option>
                 @endforeach
             </select>
@@ -65,6 +70,28 @@
         </div>
 
         <div class="mb-4">
+            <label class="form-label">Tipe Pengeluaran <span class="text-danger">*</span></label>
+            <div class="d-flex gap-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipe_tujuan" id="tipeCustomer" value="Customer" checked>
+                    <label class="form-check-label" for="tipeCustomer">Customer</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipe_tujuan" id="tipeInternal" value="Internal">
+                    <label class="form-check-label" for="tipeInternal">Internal</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4" id="divInternalDetail" style="display:none;">
+            <label class="form-label">Nama Orang/Departemen <span class="text-danger">*</span></label>
+            <input type="text" name="detail_internal" id="detailInternal" class="form-control" placeholder="Contoh: Budi - Produksi">
+            <div class="text-muted mt-1" style="font-size:.7rem;">Wajib diisi untuk pengeluaran internal</div>
+        </div>
+
+        <input type="hidden" name="tujuan_keluar" id="tujuanKeluar" value="Customer">
+
+        <div class="mb-4">
             <label class="form-label">Tanggal Keluar <span class="text-danger">*</span></label>
             <input type="date" name="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
                    value="{{ old('tanggal', date('Y-m-d')) }}" required>
@@ -78,8 +105,12 @@
 
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
-        <a href="{{ route('transaksi.keluar') }}" class="btn btn-outline-secondary">Batal</a>
-        <button type="submit" class="btn btn-primary px-5">Simpan</button>
+        <a href="{{ route('transaksi.keluar') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x me-1"></i>Batal
+        </a>
+        <button type="submit" class="btn btn-primary px-5">
+            <i class="bi bi-check-lg me-2"></i>Simpan Transaksi
+        </button>
     </div>
     </form>
 </div>
@@ -96,34 +127,61 @@ const stokInfo     = document.getElementById('stokInfo');
 const satuanLabel  = document.getElementById('satuanLabel');
 
 function muatLotDanStok() {
-    const idBarang = barangSelect.value;
+    var idBarang = barangSelect.value;
     if (!idBarang) {
         stokInfo.innerHTML = '';
         nomorLot.innerHTML = '<option value="">— Ambil dari semua stok —</option>';
         return;
     }
-    fetch(`{{ route('transaksi.cek-stok') }}?id_barang=${idBarang}`)
-        .then(r => r.json())
-        .then(data => {
+
+    // Gunakan fungsi url() Laravel langsung di dalam blade agar pasti benar jalurnya
+    var url = "{{ url('transaksi/cek-stok') }}?id_barang=" + idBarang;
+    
+    console.log('Mengecek stok ke:', url);
+
+    fetch(url)
+        .then(function(r) {
+            if (!r.ok) {
+                console.error('Response error:', r);
+                throw new Error('HTTP error! status: ' + r.status);
+            }
+            return r.json();
+        })
+        .then(function(data) {
+            console.log('Data stok diterima:', data);
             satuanLabel.textContent = data.satuan || 'pcs';
-            let opts = '<option value="">— Ambil dari semua stok —</option>';
+            var opts = '';
             if (data.lots && data.lots.length > 0) {
-                data.lots.forEach(lot => {
-                    opts += `<option value="${lot.nomor_lot}">${lot.nomor_lot} (stok: ${lot.stok_akhir} ${data.satuan})</option>`;
+                opts = '<option value="">— Pilih Nomor Lot (Opsional) —</option>';
+                data.lots.forEach(function(lot) {
+                    opts += '<option value="' + lot.nomor_lot + '">' + lot.nomor_lot + ' (stok: ' + lot.stok_akhir + ' ' + data.satuan + ')</option>';
                 });
+            } else if (data.stok > 0) {
+                opts = '<option value="">— Stok tersedia tanpa nomor lot —</option>';
+            } else {
+                opts = '<option value="">— Stok Kosong —</option>';
             }
             nomorLot.innerHTML = opts;
             tampilStok(data.stok, data.satuan, '');
+        })
+        .catch(function(err) {
+            console.error('Gagal memuat stok:', err);
+            stokInfo.innerHTML = '<div class="text-danger small">Gagal memuat data stok. (' + err.message + ')</div>';
         });
 }
 
 nomorLot.addEventListener('change', function() {
-    const idBarang = barangSelect.value;
+    var idBarang = barangSelect.value;
     if (!idBarang) return;
-    const lot = this.value;
-    fetch(`{{ route('transaksi.cek-stok') }}?id_barang=${idBarang}&nomor_lot=${encodeURIComponent(lot)}`)
-        .then(r => r.json())
-        .then(data => tampilStok(data.stok, data.satuan, lot));
+    var lot = this.value;
+    var url = "{{ url('transaksi/cek-stok') }}?id_barang=" + idBarang + "&nomor_lot=" + encodeURIComponent(lot);
+
+    console.log('Mengecek stok lot ke:', url);
+
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) { tampilStok(data.stok, data.satuan, lot); })
+        .catch(function(err) { console.error('Error:', err); });
 });
 
 function tampilStok(stok, satuan, lot) {
@@ -143,5 +201,28 @@ function tampilStok(stok, satuan, lot) {
 
 barangSelect.addEventListener('change', muatLotDanStok);
 if (barangSelect.value) muatLotDanStok();
+
+// Logika Tipe Pengeluaran
+const tipeCustomer   = document.getElementById('tipeCustomer');
+const tipeInternal   = document.getElementById('tipeInternal');
+const divInternal    = document.getElementById('divInternalDetail');
+const detailInternal = document.getElementById('detailInternal');
+const tujuanKeluar   = document.getElementById('tujuanKeluar');
+
+function updateTujuan() {
+    if (tipeInternal.checked) {
+        divInternal.style.display = 'block';
+        detailInternal.setAttribute('required', 'required');
+        tujuanKeluar.value = 'Internal: ' + detailInternal.value;
+    } else {
+        divInternal.style.display = 'none';
+        detailInternal.removeAttribute('required');
+        tujuanKeluar.value = 'Customer';
+    }
+}
+
+tipeCustomer.addEventListener('change', updateTujuan);
+tipeInternal.addEventListener('change', updateTujuan);
+detailInternal.addEventListener('input', updateTujuan);
 </script>
 @endpush
