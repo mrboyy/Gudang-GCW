@@ -19,13 +19,18 @@
 </div>
 
 
-<div class="card mb-3">
+<div class="card mb-4">
     <div class="card-body py-3">
         <form method="GET">
             <div class="row g-2 align-items-end">
                 <div class="col-md-8">
-                    <input type="text" name="search" class="form-control"
-                           placeholder="Cari nama barang, kode, atau merk..." value="{{ request('search') }}">
+                    <div class="input-group">
+                        <span class="input-group-text" style="border-radius:6px 0 0 6px;background:var(--bg);border-right:none;">
+                            <i class="bi bi-search text-muted" style="font-size:.85rem;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control" style="border-left:none;border-radius:0 6px 6px 0;"
+                               placeholder="Cari nama barang atau kode..." value="{{ request('search') }}">
+                    </div>
                 </div>
                 <div class="col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">Cari</button>
@@ -47,8 +52,7 @@
                         <th style="width:60px">Foto</th>
                         <th>Nama Barang</th>
                         <th>Kode</th>
-                        <th>Merk</th>
-                        <th class="text-end">Stok</th>
+                        <th class="text-end">On Hand</th>
                         <th class="text-center">Status</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -58,7 +62,7 @@
                     <tr>
                         <td>
                             @if($barang->foto)
-                                <img src="{{ Storage::url($barang->foto) }}"
+                                <img src="{{ asset('storage/' . $barang->foto) }}"
                                      alt="{{ $barang->nama_barang }}"
                                      style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb">
                             @else
@@ -74,13 +78,11 @@
                             @endif
                         </td>
                         <td style="color:var(--text-muted);font-size:.88rem;">{{ $barang->kode_barang }}</td>
-                        <td style="color:var(--text-muted);">{{ $barang->merk ?: '—' }}</td>
                         <td class="text-end">
                             @php $stok = $barang->getStok(); @endphp
                             <span class="fw-semibold" style="color:{{ $barang->isStokMinimum() ? 'var(--danger)' : 'inherit' }};">
                                 {{ $stok }}
                             </span>
-                            <small class="text-muted fw-normal"> {{ $barang->satuan }}</small>
                             @if($barang->isStokMinimum())
                             <div>
                                 <span class="badge" style="background:var(--danger-soft);color:var(--danger);border:1px solid #FCA5A5;font-size:.68rem;">
@@ -90,14 +92,14 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            @if($barang->is_active)
-                            <span class="badge" style="background:var(--success-soft);color:var(--success);border:1px solid #A7F3D0;">
-                                <i class="bi bi-check-circle-fill me-1"></i>Aktif
-                            </span>
+                            @if($barang->isStokMinimum())
+                                <span class="badge" style="background:#FEF2F2;color:#DC2626;border:1px solid #FCA5A5;padding:4px 10px;font-size:.72rem;">
+                                    <i class="bi bi-exclamation-circle me-1"></i>Stok Rendah
+                                </span>
                             @else
-                            <span class="badge" style="background:#F3F4F6;color:var(--text-muted);border:1px solid var(--border);">
-                                <i class="bi bi-dash-circle me-1"></i>Nonaktif
-                            </span>
+                                <span class="badge" style="background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;padding:4px 10px;font-size:.72rem;">
+                                    <i class="bi bi-check-circle me-1"></i>Normal
+                                </span>
                             @endif
                         </td>
                         <td class="text-end">
@@ -117,7 +119,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="6" class="empty-state">
                             <i class="bi bi-box-seam"></i>
                             <p>Belum ada barang terdaftar</p>
                         </td>
