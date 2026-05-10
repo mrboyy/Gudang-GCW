@@ -11,46 +11,50 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div class="page-header">
         <h4>Laporan Stok Barang</h4>
-        <p>Klik baris barang untuk melihat detail stok per nomor lot.</p>
+        <p>Klik barang untuk melihat detail stok per nomor lot.</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{{ route('laporan.export-stok', request()->only(['search','merk','group_by'])) }}" class="btn btn-success">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+    <div class="d-flex gap-2 flex-wrap">
+        <div class="btn-group" role="group">
+            <button type="button" id="btnTile" class="btn btn-sm btn-primary" title="Tampilan Tile">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+            <button type="button" id="btnTable" class="btn btn-sm btn-outline-secondary" title="Tampilan Tabel">
+                <i class="bi bi-list-ul"></i>
+            </button>
+        </div>
+        <a href="{{ route('laporan.export-stok', request()->only(['search','group_by'])) }}"
+           class="btn btn-success d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>Export Excel</span>
         </a>
-        <a href="{{ route('laporan.print-stok', request()->only(['search','merk'])) }}" target="_blank" class="btn btn-outline-secondary">
-            <i class="bi bi-file-earmark-pdf me-2"></i>Cetak PDF
+        <a href="{{ route('laporan.print-stok', request()->only(['search'])) }}"
+           target="_blank"
+           class="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <i class="bi bi-printer"></i>
+            <span>Cetak PDF</span>
         </a>
+
     </div>
 </div>
 
 <div class="card mb-3">
     <div class="card-body py-3">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-7">
                 <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Cari</label>
                 <input type="text" name="search" class="form-control"
-                       placeholder="Nama barang atau merk..." value="{{ request('search') }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Filter Merk</label>
-                <select name="merk" class="form-select">
-                    <option value="">Semua Merk</option>
-                    @foreach($merks as $m)
-                    <option value="{{ $m }}" {{ request('merk') === $m ? 'selected' : '' }}>{{ $m }}</option>
-                    @endforeach
-                </select>
+                       placeholder="Nama barang..." value="{{ request('search') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Group By</label>
                 <select name="group_by" class="form-select">
                     <option value="">— Tanpa Grup —</option>
-                    <option value="merk"   {{ request('group_by') === 'merk'   ? 'selected' : '' }}>Merk</option>
                     <option value="satuan" {{ request('group_by') === 'satuan' ? 'selected' : '' }}>Satuan</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-2 align-items-end">
                 <button type="submit" class="btn btn-primary flex-fill">Cari</button>
-                @if(request()->hasAny(['search','merk','group_by']))
+                @if(request()->hasAny(['search','group_by']))
                 <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary">Reset</a>
                 @endif
             </div>
@@ -58,6 +62,90 @@
     </div>
 </div>
 
+{{-- ═══ TILE VIEW (Grid 2 Kolom) ═══ --}}
+<div id="viewTile">
+    @php $prevGroupTile = null; @endphp
+    <div class="row g-3">
+    @forelse($barangs as $b)
+        @php
+            $stok    = $b->getStok();
+            $habis   = $b->isStokMinimum();
+            $lots    = $b->stoks->sortBy('nomor_lot');
+            $curGroupTile = match($groupBy) {
+                'satuan' => $b->satuan,
+                default  => null,
+            };
+        @endphp
+
+        @if($groupBy && $curGroupTile !== $prevGroupTile)
+            <div class="col-12">
+                <div class="stok-group-header mt-2">
+                    <i class="bi bi-tag-fill me-2" style="color:var(--brand);font-size:.8rem;"></i>{{ $curGroupTile }}
+                </div>
+            </div>
+            @php $prevGroupTile = $curGroupTile; @endphp
+        @endif
+
+        <div class="col-6">
+            <div class="stok-tile-new {{ $habis ? 'border-danger' : '' }}" onclick="toggleLotDetails('tile-lot-{{ $b->id }}', this)">
+                <div class="stok-tile-main">
+                    <div class="stok-tile-img-wrap">
+                        @if($b->foto)
+                            <img src="{{ asset('storage/' . $b->foto) }}" alt="{{ $b->nama_barang }}" class="stok-tile-img-ec">
+                        @else
+                            <div class="stok-tile-ph-ec"><i class="bi bi-person-bounding-box"></i></div>
+                        @endif
+                    </div>
+                    <div class="stok-tile-content p-2">
+                        <div class="stok-tile-title">{{ $b->nama_barang }}</div>
+                        <div class="stok-tile-sub mb-1"><code style="font-size:.65rem;color:var(--text-subtle);">{{ $b->kode_barang }}</code></div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="stok-tile-value {{ $habis ? 'text-danger' : 'text-success' }}">
+                                {{ number_format($stok) }}<small class="text-muted" style="font-size:.6rem;font-weight:500;margin-left:2px;">{{ $b->satuan }}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                @if($habis)
+                                    <span class="stok-badge-ec stok-badge-warn">Min</span>
+                                @endif
+                                <i class="bi bi-chevron-down stok-tile-chevron-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hidden Lot Details --}}
+                <div id="tile-lot-{{ $b->id }}" class="stok-tile-details" style="display:none;">
+                    <div class="p-3 pt-0 border-top">
+                        <div class="lot-table-mini mt-2">
+                            @if($lots->isNotEmpty())
+                                @foreach($lots as $s)
+                                <div class="d-flex justify-content-between py-1 border-bottom border-light">
+                                    <span class="text-muted small"><i class="bi bi-upc me-1"></i>{{ $s->nomor_lot ?? 'Tanpa Lot' }}</span>
+                                    <span class="fw-bold small">{{ $s->stok_akhir }} {{ $b->satuan }}</span>
+                                </div>
+                                @endforeach
+                            @else
+                                <div class="text-center text-muted small py-2">Tidak ada detail lot</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="col-12">
+            <div class="card"><div class="empty-state"><i class="bi bi-inbox"></i><p>Tidak ada data barang</p></div></div>
+        </div>
+    @endforelse
+    </div>
+
+    @if($barangs->hasPages())
+    <div class="mt-4">{{ $barangs->links() }}</div>
+    @endif
+</div>
+
+{{-- ═══ TABLE VIEW ═══ --}}
+<div id="viewTable" style="display:none;">
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -67,7 +155,6 @@
                         <th style="width:40px;"></th>
                         <th>Kode</th>
                         <th>Nama Barang</th>
-                        <th>Merk</th>
                         <th>Satuan</th>
                         <th class="text-end">Stok</th>
                         <th class="text-end">Min.</th>
@@ -82,18 +169,14 @@
                         $habis   = $b->isStokMinimum();
                         $lots    = $b->stoks->sortBy('nomor_lot');
                         $hasLots = $b->stoks->isNotEmpty();
-
                         $curGroup = match($groupBy) {
-                            'merk'   => ($b->merk ?: '(Tanpa Merk)'),
                             'satuan' => $b->satuan,
                             default  => null,
                         };
                     @endphp
-
-                    {{-- Group header --}}
                     @if($groupBy && $curGroup !== $prevGroup)
                     <tr class="group-header-row">
-                        <td colspan="8">
+                        <td colspan="7">
                             <i class="bi bi-tag-fill me-2" style="color:var(--brand);font-size:.8rem;"></i>
                             <span>{{ $curGroup }}</span>
                         </td>
@@ -101,7 +184,6 @@
                     @php $prevGroup = $curGroup; @endphp
                     @endif
 
-                    {{-- Baris barang --}}
                     <tr class="stok-row {{ $hasLots ? 'has-lots' : '' }}"
                         data-target="lot-{{ $b->id }}"
                         style="cursor:{{ $hasLots ? 'pointer' : 'default' }};">
@@ -114,7 +196,6 @@
                         </td>
                         <td><code class="code-tag">{{ $b->kode_barang }}</code></td>
                         <td class="fw-semibold">{{ $b->nama_barang }}</td>
-                        <td class="text-muted">{{ $b->merk ?: '—' }}</td>
                         <td>{{ $b->satuan }}</td>
                         <td class="text-end fw-bold"
                             style="color:{{ $habis ? 'var(--danger)' : 'var(--success)' }};">{{ $stok }}</td>
@@ -128,15 +209,11 @@
                         </td>
                     </tr>
 
-                    {{-- Lot detail --}}
                     @if($hasLots)
                     <tr class="lot-detail-row" id="lot-{{ $b->id }}" style="display:none;">
-                        <td colspan="8" style="padding:0;background:#FAFBFC;border-bottom:2px solid var(--border);">
+                        <td colspan="7" style="padding:0;background:#FAFBFC;border-bottom:2px solid var(--border);">
                             <div style="padding:10px 52px 14px;">
-                                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;
-                                            letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">
-                                    Detail Per Nomor Lot
-                                </div>
+                                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">Detail Per Nomor Lot</div>
                                 <table class="table table-sm mb-0" style="background:transparent;">
                                     <thead>
                                         <tr style="background:transparent;">
@@ -154,8 +231,7 @@
                                                 <span class="text-muted" style="font-style:italic;font-size:.8rem;">Tanpa Lot</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end fw-bold"
-                                                style="color:var(--text);border-bottom:1px solid var(--border-soft);padding:8px 12px;">
+                                            <td class="text-end fw-bold" style="color:var(--text);border-bottom:1px solid var(--border-soft);padding:8px 12px;">
                                                 {{ $s->stok_akhir }}
                                                 <small class="text-muted fw-normal">{{ $b->satuan }}</small>
                                             </td>
@@ -169,11 +245,7 @@
                     @endif
 
                     @empty
-                    <tr>
-                        <td colspan="8" class="empty-state">
-                            <i class="bi bi-inbox"></i><p>Tidak ada data barang</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i><p>Tidak ada data barang</p></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -183,16 +255,230 @@
     <div class="card-footer">{{ $barangs->links() }}</div>
     @endif
 </div>
+</div>
 
 @push('styles')
 <style>
-/* Toggle chevron — lingkaran kecil abu */
+/* ═══ E-COMMERCE TILE (PT GCW) ═══ */
+.stok-tile-new {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .2s ease;
+    box-shadow: var(--shadow-xs);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.stok-tile-new:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--brand);
+}
+.stok-tile-main { display: flex; flex-direction: row; flex: 1; align-items: flex-start; }
+/* Foto area — portrait 3×4 */
+.stok-tile-img-wrap {
+    width: 38px;
+    height: 50px;
+    background: var(--bg);
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 4px;
+    margin: 8px 0 8px 8px;
+    border: 1px solid var(--border-soft);
+}
+.stok-tile-img-ec {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.stok-tile-ph-ec {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-subtle);
+    font-size: .75rem;
+}
+/* Badge status */
+.stok-badge-ec {
+    font-size: .56rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+}
+.stok-badge-ok  { background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; }
+.stok-badge-warn{ background:#FEF2F2; color:#DC2626; border:1px solid #FCA5A5; }
+/* Content area */
+.stok-tile-content { flex: 1; }
+.stok-tile-title {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+}
+.stok-tile-sub { margin-top: 2px; }
+.stok-tile-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+}
+.stok-tile-chevron-sm {
+    color: var(--text-subtle);
+    font-size: .8rem;
+    transition: transform .3s;
+    flex-shrink: 0;
+}
+.stok-tile-new.open .stok-tile-chevron-sm { transform: rotate(180deg); color: var(--brand); }
+/* Lot details */
+.stok-tile-details {
+    background: var(--bg);
+    border-top: 1px solid var(--border-soft);
+    animation: slideDown .25s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.lot-table-mini .text-muted { color: var(--text-muted) !important; }
+.lot-table-mini .fw-bold { color: var(--text) !important; }
+.lot-table-mini .border-bottom { border-bottom-color: var(--border-soft) !important; }
+
+/* Indikator Group */
+.stok-group-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    margin-top: 4px;
+}
+
+/* ═══ OLD TILE (Keep for reference) ═══ */
+.stok-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow .15s, transform .15s;
+}
+.stok-tile:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.stok-tile-warn { border-left: 3px solid var(--danger); }
+
+.stok-tile-foto {
+    flex-shrink: 0;
+}
+.stok-tile-foto img {
+    width: 56px; height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+.stok-tile-foto-ph {
+    width: 56px; height: 56px;
+    border-radius: 8px;
+    background: #F3F4F6;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-subtle);
+    font-size: 1.4rem;
+    border: 1px solid var(--border);
+}
+
+.stok-tile-body { flex: 1; min-width: 0; }
+.stok-tile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.stok-tile-info { min-width: 0; }
+.stok-tile-name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -.01em;
+}
+.stok-tile-merk {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+.stok-tile-qty {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.stok-tile-qty small {
+    font-size: .7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+.stok-tile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.stok-tile-lots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.stok-lot-chip {
+    font-size: .7rem;
+    background: #F3F4F6;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+.stok-lot-chip strong { color: var(--text); }
+
+.stok-group-header {
+    background: #F3F4F6;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #374151;
+    margin-bottom: 8px;
+    margin-top: 4px;
+}
+
+/* ═══ TABLE STYLES ═══ */
 .lot-chevron {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     background: #F3F4F6;
     border: 1.5px solid #D1D5DB;
@@ -204,21 +490,10 @@
     transition: transform .2s;
     display: inline-block;
 }
-.stok-row.has-lots:hover .lot-chevron {
-    background: #E5E7EB;
-    border-color: #9CA3AF;
-}
-.stok-row.open .lot-chevron {
-    background: var(--brand-soft);
-    border-color: var(--brand);
-}
-.stok-row.open .lot-chevron .toggle-icon {
-    color: var(--brand);
-    transform: rotate(90deg);
-}
+.stok-row.has-lots:hover .lot-chevron { background: #E5E7EB; border-color: #9CA3AF; }
+.stok-row.open .lot-chevron { background: var(--brand-soft); border-color: var(--brand); }
+.stok-row.open .lot-chevron .toggle-icon { color: var(--brand); transform: rotate(90deg); }
 .stok-row.has-lots:hover { background: #F9FAFB; }
-
-/* Group header row */
 .group-header-row td {
     background: #F3F4F6;
     border-top: 2px solid var(--border);
@@ -231,9 +506,16 @@
     color: #374151;
 }
 
+@media (max-width: 768px) {
+    .stok-tile-foto img, .stok-tile-foto-ph { width: 48px; height: 48px; }
+    .stok-tile-qty { font-size: 1.2rem; }
+    .stok-tile-name { font-size: .88rem; }
+}
+
 @media print {
     .card { box-shadow: none !important; border: 1px solid #ddd !important; }
-    .btn, .card-footer { display: none !important; }
+    .btn, .card-footer, #viewTile { display: none !important; }
+    #viewTable { display: block !important; }
     .lot-detail-row { display: table-row !important; }
     .lot-chevron { display: none !important; }
 }
@@ -242,6 +524,47 @@
 
 @push('scripts')
 <script>
+// Toggle Lot Details for New Tile View
+function toggleLotDetails(id, el) {
+    var detail = document.getElementById(id);
+    var isOpen = el.classList.contains('open');
+
+    if (isOpen) {
+        el.classList.remove('open');
+        detail.style.display = 'none';
+    } else {
+        el.classList.add('open');
+        detail.style.display = 'block';
+    }
+}
+
+// View toggle
+const btnTile  = document.getElementById('btnTile');
+const btnTable = document.getElementById('btnTable');
+const viewTile = document.getElementById('viewTile');
+const viewTable= document.getElementById('viewTable');
+
+const savedView = localStorage.getItem('laporan_stok_view') || 'tile';
+if (savedView === 'table') switchTable();
+
+function switchTile() {
+    viewTile.style.display  = '';
+    viewTable.style.display = 'none';
+    btnTile.classList.replace('btn-outline-secondary','btn-primary');
+    btnTable.classList.replace('btn-primary','btn-outline-secondary');
+    localStorage.setItem('laporan_stok_view','tile');
+}
+function switchTable() {
+    viewTile.style.display  = 'none';
+    viewTable.style.display = '';
+    btnTable.classList.replace('btn-outline-secondary','btn-primary');
+    btnTile.classList.replace('btn-primary','btn-outline-secondary');
+    localStorage.setItem('laporan_stok_view','table');
+}
+btnTile.addEventListener('click', switchTile);
+btnTable.addEventListener('click', switchTable);
+
+// Table lot expand
 document.querySelectorAll('.stok-row.has-lots').forEach(function(row) {
     row.addEventListener('click', function() {
         var detail = document.getElementById(row.dataset.target);
