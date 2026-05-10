@@ -8,11 +8,20 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
     <title>@yield('title', 'Gudang') — PT Galih Cipta Wisesa</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        window.APP_URL = "{{ url('/') }}";
+    </script>
     <style>
         :root {
             --brand: #F5821F;
@@ -46,6 +55,48 @@
             --shadow-xs: 0 1px 3px rgba(16,24,40,.06);
             --shadow-sm: 0 2px 8px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
             --shadow-md: 0 4px 16px rgba(16,24,40,.08), 0 2px 4px rgba(16,24,40,.04);
+        }
+
+        [data-bs-theme="dark"] {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+            --border-soft: #1e293b;
+
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-subtle: #475569;
+
+            --sidebar-active-bg: rgba(245,130,31,.12);
+            --brand-soft: rgba(245,130,31,.08);
+
+            --shadow-xs: 0 1px 3px rgba(0,0,0,.3);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,.4);
+            
+            --table-header-bg: #1e293b;
+        }
+
+        [data-bs-theme="dark"] .bg-light { background-color: var(--bg) !important; }
+        [data-bs-theme="dark"] .bg-white { background-color: var(--surface) !important; }
+        [data-bs-theme="dark"] .text-dark { color: var(--text) !important; }
+
+        :root {
+            --table-header-bg: #f8fafc;
+        }
+
+        .table > :not(caption) > * > * {
+            background-color: var(--surface);
+            color: var(--text);
+        }
+        .table thead th {
+            background-color: var(--table-header-bg) !important;
+            color: var(--text-muted) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+
+        body.theme-transitioning, body.theme-transitioning * {
+            transition: background-color .35s ease, color .35s ease, border-color .35s ease,
+                        fill .35s ease, stroke .35s ease, box-shadow .35s ease !important;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -108,11 +159,11 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .1em;
-            color: #3D4559;
+            color: #64748b; /* Forced light color for sidebar headers */
             padding: 16px 18px 5px;
         }
 
-        .sidebar a.slink {
+        .sidebar .slink {
             position: relative;
             display: flex;
             align-items: center;
@@ -120,38 +171,75 @@
             padding: 9px 14px;
             margin: 1px 8px;
             border-radius: 7px;
-            color: #7A8499;
+            color: #94a3b8; /* Forced light color for sidebar links */
             font-size: .875rem;
             font-weight: 500;
             text-decoration: none;
             transition: background .15s, color .15s;
             overflow: hidden;
         }
-        .sidebar a.slink i {
+        .sidebar .slink i {
             font-size: 1rem;
             width: 18px;
             text-align: center;
             flex-shrink: 0;
         }
-        .sidebar a.slink:hover {
+        .sidebar .slink:hover {
             background: rgba(255,255,255,.05);
-            color: #D1D5DB;
+            color: #f1f5f9;
         }
-        .sidebar a.slink.active {
+        .sidebar .slink.active {
             background: var(--sidebar-active-bg);
-            color: #F3F4F6;
+            color: #f8fafc;
             font-weight: 600;
         }
-        .sidebar a.slink.active::before {
+        .sidebar .slink.active::before {
             content: '';
             position: absolute;
-            left: 0; top: 7px; bottom: 7px;
+            left: 0; top: 6px; bottom: 6px;
             width: 3px;
             background: var(--brand);
             border-radius: 0 3px 3px 0;
-            box-shadow: 1px 0 10px rgba(245,130,31,.55);
+            box-shadow: 2px 0 12px rgba(245,130,31,.7);
         }
-        .sidebar a.slink.active i { color: var(--brand); }
+        .sidebar .slink.active i { color: var(--brand); }
+
+        /* Collapsible Menu */
+        .sidebar .nav-dropdown {
+            display: none;
+            background: rgba(0,0,0,.2);
+            margin: 0 8px 8px;
+            border-radius: 0 0 8px 8px;
+            padding: 4px 0;
+            border-left: 1px solid rgba(255,255,255,.05);
+            border-right: 1px solid rgba(255,255,255,.05);
+            border-bottom: 1px solid rgba(255,255,255,.05);
+        }
+        .sidebar .nav-dropdown.show { display: block; }
+        .sidebar .slink-drop { cursor: pointer; justify-content: space-between !important; }
+        .sidebar .slink-drop .drop-chevron { 
+            font-size: .75rem; 
+            transition: transform .2s; 
+            color: #64748b;
+        }
+        .sidebar .slink-drop.active .drop-chevron, 
+        .sidebar .slink-drop[aria-expanded="true"] .drop-chevron { 
+            transform: rotate(180deg); 
+            color: var(--brand);
+        }
+        .sidebar .nav-dropdown .slink {
+            margin: 0 4px;
+            padding: 7px 14px 7px 38px;
+            font-size: .82rem;
+            color: #94a3b8;
+        }
+        .sidebar .nav-dropdown .slink:hover {
+            color: #f1f5f9;
+        }
+        .sidebar .nav-dropdown .slink.active {
+            color: #fff;
+        }
+        .sidebar .nav-dropdown .slink::before { left: 12px; }
 
         .sidebar-foot {
             margin-top: auto;
@@ -283,23 +371,23 @@
         /* ═══════ CARDS ═══════ */
         .card {
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             background: var(--surface);
             box-shadow: var(--shadow-xs);
         }
         .card-header {
             background: var(--surface);
             border-bottom: 1px solid var(--border-soft);
-            border-radius: 8px 8px 0 0 !important;
-            padding: 13px 18px;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 14px 20px;
             font-size: .875rem;
             font-weight: 600;
         }
         .card-footer {
             background: #FAFBFC;
             border-top: 1px solid var(--border-soft);
-            padding: 12px 18px;
-            border-radius: 0 0 8px 8px;
+            padding: 12px 20px;
+            border-radius: 0 0 12px 12px;
         }
 
         /* ═══════ TABLES ═══════ */
@@ -312,8 +400,8 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .05em;
-            color: #9CA3AF;
-            background: #F8F9FA !important;
+            color: var(--text-muted);
+            background: var(--table-header-bg) !important;
             padding: 11px 18px;
             border-bottom: 1px solid var(--border);
             border-top: none;
@@ -326,8 +414,8 @@
             color: var(--text);
         }
         .table tbody tr:last-child td { border-bottom: none; }
-        .table tbody tr:hover { background: #FAFBFC; }
-        .table-hover tbody tr:hover { background: #FAFBFC; }
+        .table tbody tr:hover { background: rgba(0,0,0,.035); }
+        [data-bs-theme="dark"] .table tbody tr:hover { background: rgba(255,255,255,.02); }
 
         /* ═══════ FORMS ═══════ */
         .form-label {
@@ -340,7 +428,7 @@
         .form-control, .form-select {
             font-size: .9rem;
             padding: 9px 12px;
-            border: 1px solid #D1D5DB;
+            border: 1px solid var(--border);
             border-radius: 6px;
             height: auto;
             color: var(--text);
@@ -352,16 +440,15 @@
             border-color: var(--brand);
             box-shadow: 0 0 0 3px rgba(245,130,31,.12);
             outline: none;
+            background: var(--surface);
         }
-        .form-control::placeholder { color: #BCC1CC; }
-        .form-control.is-invalid { border-color: var(--danger); }
-        .form-control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.1); }
-        .invalid-feedback { font-size: .82rem; color: var(--danger); font-weight: 500; }
+        .form-control::placeholder { color: var(--text-subtle); }
+        
         .input-group-text {
             font-size: .88rem;
             padding: 9px 13px;
-            border: 1px solid #D1D5DB;
-            background: #F9FAFB;
+            border: 1px solid var(--border);
+            background: var(--bg);
             color: var(--text-muted);
             border-radius: 0 6px 6px 0;
             font-weight: 600;
@@ -439,37 +526,37 @@
         /* ═══════ STAT CARDS (dashboard) ═══════ */
         .stat-card {
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 20px 22px;
             background: var(--surface);
             box-shadow: var(--shadow-xs);
             transition: box-shadow .2s, transform .2s;
             height: 100%;
         }
-        .stat-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+        .stat-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-2px); }
         .stat-card .s-icon {
-            width: 44px; height: 44px;
-            border-radius: 10px;
+            width: 48px; height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             flex-shrink: 0;
         }
         .stat-card .s-label {
-            font-size: .76rem;
+            font-size: .72rem;
             color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 3px;
-            letter-spacing: .02em;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: .04em;
             text-transform: uppercase;
         }
         .stat-card .s-num {
-            font-size: 1.85rem;
+            font-size: 2rem;
             font-weight: 800;
             line-height: 1;
             color: var(--text);
-            letter-spacing: -0.03em;
+            letter-spacing: -0.04em;
         }
 
         /* ═══════ QUICK ACTIONS ═══════ */
@@ -480,7 +567,7 @@
             justify-content: center;
             gap: 9px;
             padding: 20px 10px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             background: var(--surface);
             font-size: .85rem;
@@ -493,7 +580,7 @@
         }
         .btn-action .ba-icon {
             width: 40px; height: 40px;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -531,12 +618,17 @@
         .page-item.active .page-link { background: var(--brand); border-color: var(--brand); color: #fff; }
 
         /* ═══════ PAGE HEADER ═══════ */
+        .page-header {
+            padding-bottom: 16px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--border-soft);
+        }
         .page-header h4 {
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             font-weight: 800;
             color: var(--text);
             letter-spacing: -0.03em;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
         .page-header p {
             font-size: .875rem;
@@ -569,6 +661,11 @@
             background: var(--info-soft);
             color: #1E40AF;
             border: 1px solid #BFDBFE;
+        }
+        .badge-retur-p {
+            background: var(--warning-soft);
+            color: #92400E;
+            border: 1px solid #FCD34D;
         }
         .badge-status-ok {
             background: var(--success-soft);
@@ -757,6 +854,9 @@
         <a href="{{ route('dashboard') }}" class="slink {{ request()->routeIs('dashboard') ? 'active' : '' }}">
             <i class="bi bi-house"></i> Beranda
         </a>
+        <a href="{{ route('barang.index') }}" class="slink {{ request()->routeIs('barang.*') ? 'active' : '' }}">
+            <i class="bi bi-archive"></i> Daftar Barang
+        </a>
 
         <div class="nav-sep">Transaksi</div>
         <a href="{{ route('transaksi.masuk') }}" class="slink {{ request()->routeIs('transaksi.masuk','transaksi.create-masuk') ? 'active' : '' }}">
@@ -764,24 +864,6 @@
         </a>
         <a href="{{ route('transaksi.keluar') }}" class="slink {{ request()->routeIs('transaksi.keluar','transaksi.create-keluar') ? 'active' : '' }}">
             <i class="bi bi-box-arrow-up"></i> Barang Keluar
-        </a>
-        <a href="{{ route('retur.index') }}" class="slink {{ request()->routeIs('retur.index','retur.create') ? 'active' : '' }}">
-            <i class="bi bi-arrow-return-left"></i> Retur Customer
-        </a>
-        <a href="{{ route('retur.produksi.index') }}" class="slink {{ request()->routeIs('retur.produksi.*') ? 'active' : '' }}">
-            <i class="bi bi-arrow-counterclockwise"></i> Retur Produksi
-        </a>
-
-        @if(auth()->user()->isKepalaGudang())
-        <div class="nav-sep">Stok</div>
-        <a href="{{ route('laporan.stok') }}" class="slink {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
-            <i class="bi bi-clipboard-data"></i> Monitor Stok
-        </a>
-        @endif
-
-        <div class="nav-sep">Data</div>
-        <a href="{{ route('barang.index') }}" class="slink {{ request()->routeIs('barang.*') ? 'active' : '' }}">
-            <i class="bi bi-archive"></i> Daftar Barang
         </a>
 
         @if(auth()->user()->isKepalaGudang() || auth()->user()->isAdmin())
@@ -800,7 +882,7 @@
             <i class="bi bi-people"></i> Kelola Pengguna
         </a>
         <a href="{{ route('audit.index') }}" class="slink {{ request()->routeIs('audit.*') ? 'active' : '' }}">
-            <i class="bi bi-clock-history"></i> Audit Log
+            <i class="bi bi-shield-check"></i> Audit Log
         </a>
         @endif
     </nav>
@@ -831,6 +913,10 @@
         <i class="bi bi-calendar3"></i>
         {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
     </span>
+
+    <button id="themeToggle" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Ganti Tema">
+        <i class="bi bi-sun-fill" id="themeIcon"></i>
+    </button>
 
     @if(auth()->user()->isAdmin() || auth()->user()->isKepalaGudang())
     @php
@@ -974,6 +1060,47 @@
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 
+function toggleNavDropdown(id) {
+    const drop = document.getElementById(id);
+    const trigger = drop.previousElementSibling;
+    const isShow = drop.classList.contains('show');
+    
+    if (isShow) {
+        drop.classList.remove('show');
+        trigger.setAttribute('aria-expanded', 'false');
+    } else {
+        drop.classList.add('show');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+}
+
+// Dark Mode Toggle
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const htmlEl      = document.documentElement;
+
+function updateIcon(theme) {
+    if (theme === 'dark') {
+        themeIcon.className = 'bi bi-moon-stars-fill text-warning';
+    } else {
+        themeIcon.className = 'bi bi-sun-fill text-muted';
+    }
+}
+
+// Set initial icon
+updateIcon(htmlEl.getAttribute('data-bs-theme'));
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = htmlEl.getAttribute('data-bs-theme');
+    const newTheme     = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.body.classList.add('theme-transitioning');
+    htmlEl.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateIcon(newTheme);
+    setTimeout(() => document.body.classList.remove('theme-transitioning'), 400);
+});
+
 // Global: anti double-submit + loading state
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('form').forEach(form => {
@@ -1006,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 // ── Global auto-refresh: berlaku di semua halaman ──────────────────────────
 (function() {
-    var CHECK_URL = '{{ route("api.last-update") }}';
+    var CHECK_URL = window.APP_URL + '/api/last-update';
     var knownTs   = null;
 
     function isSafePage() {
@@ -1026,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(function() {});
     }
 
-    setInterval(check, 8000);
+    setInterval(check, 20000); 
     check();
 })();
 </script>
