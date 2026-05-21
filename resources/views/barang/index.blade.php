@@ -49,18 +49,18 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th style="width:60px">Foto</th>
+                        <th class="d-none d-md-table-cell" style="width:60px">Foto</th>
                         <th>Nama Barang</th>
-                        <th>Kode</th>
-                        <th class="text-end">On Hand</th>
-                        <th class="text-center">Status</th>
+                        <th class="d-none d-md-table-cell">Kode</th>
+                        <th class="text-end">Stok</th>
+                        <th class="text-center d-none d-md-table-cell">Status</th>
                         <th class="text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($barangs as $barang)
                     <tr>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             @if($barang->foto)
                                 <img src="{{ asset('storage/' . $barang->foto) }}"
                                      alt="{{ $barang->nama_barang }}"
@@ -73,26 +73,33 @@
                         </td>
                         <td>
                             <div class="fw-semibold">{{ $barang->nama_barang }}</div>
+                            <div style="font-size:.75rem;color:var(--text-muted);" class="d-md-none">{{ $barang->kode_barang }}</div>
                             @if($barang->deskripsi)
-                            <div style="font-size:.78rem;color:var(--text-muted);">{{ Str::limit($barang->deskripsi, 60) }}</div>
+                            <div style="font-size:.78rem;color:var(--text-muted);" class="d-none d-md-block">{{ Str::limit($barang->deskripsi, 60) }}</div>
                             @endif
                         </td>
-                        <td style="color:var(--text-muted);font-size:.88rem;">{{ $barang->kode_barang }}</td>
+                        <td class="d-none d-md-table-cell" style="color:var(--text-muted);font-size:.88rem;">{{ $barang->kode_barang }}</td>
                         <td class="text-end">
                             @php $stok = $barang->getStok(); @endphp
                             <span class="fw-semibold" style="color:{{ $barang->isStokMinimum() ? 'var(--danger)' : 'inherit' }};">
                                 {{ $stok }}
                             </span>
-                            @if($barang->isStokMinimum())
-                            <div>
-                                <span class="badge" style="background:var(--danger-soft);color:var(--danger);border:1px solid #FCA5A5;font-size:.68rem;">
-                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Min
-                                </span>
+                            <div class="d-md-none" style="margin-top:2px;">
+                                @if(!$barang->is_active)
+                                    <span class="badge" style="background:#F3F4F6;color:#6B7280;border:1px solid #D1D5DB;font-size:.62rem;">Nonaktif</span>
+                                @elseif($barang->isStokMinimum())
+                                    <span class="badge" style="background:var(--danger-soft);color:var(--danger);border:1px solid #FCA5A5;font-size:.62rem;">Stok Rendah</span>
+                                @else
+                                    <span class="badge" style="background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;font-size:.62rem;">Normal</span>
+                                @endif
                             </div>
-                            @endif
                         </td>
-                        <td class="text-center">
-                            @if($barang->isStokMinimum())
+                        <td class="text-center d-none d-md-table-cell">
+                            @if(!$barang->is_active)
+                                <span class="badge" style="background:#F3F4F6;color:#6B7280;border:1px solid #D1D5DB;padding:4px 10px;font-size:.72rem;">
+                                    <i class="bi bi-slash-circle me-1"></i>Nonaktif
+                                </span>
+                            @elseif($barang->isStokMinimum())
                                 <span class="badge" style="background:#FEF2F2;color:#DC2626;border:1px solid #FCA5A5;padding:4px 10px;font-size:.72rem;">
                                     <i class="bi bi-exclamation-circle me-1"></i>Stok Rendah
                                 </span>
@@ -104,14 +111,31 @@
                         </td>
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="{{ route('barang.edit', $barang) }}" class="btn btn-sm btn-outline-secondary">
+                                <a href="{{ route('barang.edit', $barang) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('barang.destroy', $barang) }}" method="POST" class="d-inline"
+                                @if($barang->is_active)
+                                <form action="{{ route('barang.toggle-active', $barang) }}" method="POST" class="d-inline"
                                       onsubmit="return confirm('Nonaktifkan barang {{ addslashes(e($barang->nama_barang)) }}?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" {{ !$barang->is_active ? 'disabled' : '' }}>
+                                    @csrf @method('PATCH')
+                                    <button class="btn btn-sm btn-outline-warning" title="Nonaktifkan">
                                         <i class="bi bi-slash-circle"></i>
+                                    </button>
+                                </form>
+                                @else
+                                <form action="{{ route('barang.toggle-active', $barang) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('Aktifkan kembali barang {{ addslashes(e($barang->nama_barang)) }}?')">
+                                    @csrf @method('PATCH')
+                                    <button class="btn btn-sm btn-outline-success" title="Aktifkan">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                                @endif
+                                <form action="{{ route('barang.destroy', $barang) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('HAPUS PERMANEN barang {{ addslashes(e($barang->nama_barang)) }}?\n\nTidak bisa dibatalkan!')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" title="Hapus Permanen">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
                             </div>

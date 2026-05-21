@@ -16,15 +16,19 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
         ]);
 
-        User::firstOrCreate(['username' => 'kepala'],   ['password' => Hash::make('kepala123'),   'role' => 'kepala_gudang', 'is_active' => true]);
-        User::firstOrCreate(['username' => 'operator'], ['password' => Hash::make('operator123'), 'role' => 'operator',      'is_active' => true]);
+        if (app()->environment('production')) {
+            return;
+        }
+
+        User::firstOrCreate(['username' => 'kepala'],   ['password' => Hash::make('Kepala@gcw123'),   'role' => 'kepala_gudang', 'is_active' => true]);
+        User::firstOrCreate(['username' => 'operator'], ['password' => Hash::make('Operator@gcw123'), 'role' => 'operator',      'is_active' => true]);
 
         $barangs = [
-            ['kode_barang' => 'BRG-001', 'nama_barang' => 'Kleenoxide Disinfektan', 'merk' => 'Kleenoxide', 'satuan' => 'Liter',  'stok_minimum' => 10],
-            ['kode_barang' => 'BRG-002', 'nama_barang' => 'Hand Sanitizer WHO',     'merk' => 'GCW',        'satuan' => 'Botol',  'stok_minimum' => 20],
-            ['kode_barang' => 'BRG-003', 'nama_barang' => 'Masker Medis',           'merk' => 'Mediklin',   'satuan' => 'Box',    'stok_minimum' => 5],
-            ['kode_barang' => 'BRG-004', 'nama_barang' => 'Sarung Tangan Latex',    'merk' => 'SafeGlove',  'satuan' => 'Box',    'stok_minimum' => 10],
-            ['kode_barang' => 'BRG-005', 'nama_barang' => 'Baskuma Pro',            'merk' => 'Baskuma',    'satuan' => 'Unit',   'stok_minimum' => 2],
+            ['kode_barang' => 'BRG-001', 'nama_barang' => 'Kleenoxide Disinfektan', 'satuan' => 'Liter',  'stok_minimum' => 10],
+            ['kode_barang' => 'BRG-002', 'nama_barang' => 'Hand Sanitizer WHO',     'satuan' => 'Botol',  'stok_minimum' => 20],
+            ['kode_barang' => 'BRG-003', 'nama_barang' => 'Masker Medis',           'satuan' => 'Box',    'stok_minimum' => 5],
+            ['kode_barang' => 'BRG-004', 'nama_barang' => 'Sarung Tangan Latex',    'satuan' => 'Box',    'stok_minimum' => 10],
+            ['kode_barang' => 'BRG-005', 'nama_barang' => 'Baskuma Pro',            'satuan' => 'Unit',   'stok_minimum' => 2],
         ];
 
         $stokSamples = [

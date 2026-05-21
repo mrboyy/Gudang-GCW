@@ -43,7 +43,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Email <span class="text-muted small">(opsional, untuk notifikasi)</span></label>
+            <label class="form-label">Email <span class="text-muted small">(opsional)</span></label>
             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
                    value="{{ old('email') }}" placeholder="admin@perusahaan.com">
             @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -66,12 +66,25 @@
                    class="form-control @error('password') is-invalid @enderror"
                    required autocomplete="new-password">
             @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            <div class="form-text text-muted">Minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.</div>
+            <div class="form-text text-muted">Min. 8 karakter, wajib ada huruf besar, huruf kecil, dan angka.</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
             <input type="password" name="password_confirmation" class="form-control" required autocomplete="new-password">
+        </div>
+
+        <div style="border-top:1px solid var(--border-soft);padding-top:14px;margin-bottom:16px;">
+            <div style="font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Kontak</div>
+            <div class="mb-1">
+                <label class="form-label">Nomor Telepon <span class="text-muted small">(opsional)</span></label>
+                <div class="input-group">
+                    <span class="input-group-text">+62</span>
+                    <input type="text" name="phone" class="form-control" value="{{ old('phone') }}"
+                           placeholder="8123456789" inputmode="numeric" maxlength="15">
+                </div>
+                <div class="form-text">Nomor tanpa +62. Contoh: 8123456789</div>
+            </div>
         </div>
 
         <div style="border-top:1px solid var(--border-soft);padding-top:14px;">

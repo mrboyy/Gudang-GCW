@@ -44,7 +44,8 @@ class StokService
             $sisa = $qty;
             $stoks = Stok::where('id_barang', $barang->id)
                 ->where('stok_akhir', '>', 0)
-                ->orderBy('tanggal_update')
+                ->orderByRaw('nomor_lot IS NULL ASC')
+                ->orderBy('nomor_lot')
                 ->lockForUpdate()
                 ->get();
 

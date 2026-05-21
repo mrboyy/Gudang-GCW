@@ -14,7 +14,6 @@ class BarangFactory extends Factory
         return [
             'kode_barang'  => fake()->unique()->bothify('BRG-###'),
             'nama_barang'  => fake()->words(3, true),
-            'merk'         => fake()->word(),
             'satuan'       => 'pcs',
             'stok_minimum' => 10,
             'deskripsi'    => fake()->optional()->sentence(),

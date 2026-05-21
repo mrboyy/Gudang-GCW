@@ -1,4 +1,4 @@
-@extends('layouts.print')
+﻿@extends('layouts.print')
 
 @php
     $jenis = $transaksi->jenis_transaksi;
@@ -38,6 +38,18 @@
         <td>Nomor Transaksi</td><td>:</td>
         <td><strong>{{ $transaksi->no_transaksi }}</strong></td>
     </tr>
+    @if($jenis === 'keluar' && $transaksi->no_surat_jalan)
+    <tr>
+        <td>No. Surat Jalan</td><td>:</td>
+        <td><strong>{{ $transaksi->no_surat_jalan }}</strong></td>
+    </tr>
+    @endif
+    @if(in_array($jenis, ['retur_customer','retur_produksi']) && $transaksi->no_ref)
+    <tr>
+        <td>Ref. No. SJ</td><td>:</td>
+        <td>{{ $transaksi->no_ref }}</td>
+    </tr>
+    @endif
     <tr>
         <td>Jenis</td><td>:</td>
         <td><span class="badge-jenis {{ $badgeClass }}">{{ $jenisLabel }}</span></td>
@@ -51,17 +63,19 @@
         <td>{{ $transaksi->barang->nama_barang }}</td>
     </tr>
     <tr>
-        <td>Merk</td><td>:</td>
-        <td>{{ $transaksi->barang->merk ?? '—' }}</td>
-    </tr>
-    <tr>
         <td>Kode Barang</td><td>:</td>
         <td>{{ $transaksi->barang->kode_barang }}</td>
     </tr>
     <tr>
-        <td>Nomor Lot</td><td>:</td>
+        <td>Lot</td><td>:</td>
         <td>{{ $transaksi->nomor_lot ?? '—' }}</td>
     </tr>
+    @if($transaksi->jenis_transaksi === 'keluar')
+    <tr>
+        <td>Tujuan</td><td>:</td>
+        <td>{{ $transaksi->tujuan_keluar ?: '—' }}</td>
+    </tr>
+    @endif
     <tr>
         <td>Keterangan</td><td>:</td>
         <td>{{ $transaksi->keterangan ?: '—' }}</td>

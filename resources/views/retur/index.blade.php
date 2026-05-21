@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Retur Customer')
 @section('page-title', 'Retur Customer')
 
@@ -22,10 +22,11 @@
     <div class="card-body py-3">
         <form method="GET">
             <div class="row g-2 align-items-end">
-                <div class="col-md-5">
+                <div class="col-12 col-md-9">
                     <input type="text" name="search" class="form-control"
-                           placeholder="Cari nama barang, merk, no. transaksi..." value="{{ request('search') }}">
+                           placeholder="Cari nama barang atau no. transaksi..." value="{{ request('search') }}">
                 </div>
+
                 <div class="col-md-5">
                     <div class="d-flex gap-2 flex-wrap">
                         @foreach(['hari'=>'Hari Ini','bulan'=>'Bulan Ini','tahun'=>'Tahun Ini'] as $val=>$label)
@@ -56,11 +57,12 @@
                 <thead>
                     <tr>
                         <th>No. Transaksi</th>
-                        <th>Tanggal</th>
+                        <th class="d-none d-md-table-cell">No. Ref (SJ)</th>
+                        <th class="d-none d-md-table-cell">Tanggal</th>
                         <th>Nama Barang</th>
-                        <th>No. Lot</th>
+                        <th class="d-none d-lg-table-cell">Lot</th>
                         <th class="text-end">Jumlah</th>
-                        <th>Keterangan</th>
+                        <th class="d-none d-lg-table-cell">Keterangan</th>
                         <th class="text-end">Aksi</th>
                     </tr>
                 </thead>
@@ -72,23 +74,30 @@
                                 <span class="badge badge-retur">{{ $t->no_transaksi }}</span>
                             </a>
                             @if($t->is_void)
-                            <span class="badge ms-1" style="background:#FEE2E2;color:#DC2626;font-size:.7rem;">Batal</span>
+                            <span class="badge ms-1" style="background:#fff5f5;color:#991b1b;font-size:.7rem;border:1px solid #fecaca;">Batal</span>
                             @endif
                         </td>
-                        <td>{{ $t->tanggal->format('d/m/Y') }}</td>
+                        <td class="d-none d-md-table-cell">
+                            @if($t->no_ref)
+                            <span class="text-muted" style="font-size:.85rem;font-weight:600;">{{ $t->no_ref }}</span>
+                            @else
+                            <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td class="d-none d-md-table-cell">{{ $t->tanggal->format('d/m/Y') }}</td>
                         <td class="fw-semibold">{{ $t->barang->nama_barang }}</td>
-                        <td>{{ $t->nomor_lot ?: '—' }}</td>
+                        <td class="d-none d-lg-table-cell">{{ $t->nomor_lot ?: '—' }}</td>
                         <td class="text-end fw-semibold" style="color:var(--info);">
                             {{ $t->quantity }} <small class="text-muted fw-normal">{{ $t->barang->satuan }}</small>
                         </td>
-                        <td style="color:var(--text-muted);font-size:.85rem;">{{ $t->keterangan ?: '—' }}</td>
+                        <td class="d-none d-lg-table-cell" style="color:var(--text-muted);font-size:.85rem;">{{ $t->keterangan ?: '—' }}</td>
                         <td class="text-end">
                             <a href="{{ route('transaksi.show', $t) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             <i class="bi bi-arrow-return-left"></i>
                             <p>Belum ada catatan retur customer</p>
                         </td>

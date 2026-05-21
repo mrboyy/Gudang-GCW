@@ -1,4 +1,4 @@
-@extends('layouts.print')
+﻿@extends('layouts.print')
 
 @section('title', 'Laporan Transaksi')
 @section('doc-title', 'LAPORAN TRANSAKSI')
@@ -28,7 +28,8 @@
             <th>Jenis</th>
             <th>Tanggal</th>
             <th>Nama Barang</th>
-            <th>No. Lot</th>
+            <th>Lot</th>
+            <th>Supplier/Tujuan</th>
             <th style="text-align:right">Qty</th>
             <th>Operator</th>
             <th>Keterangan</th>
@@ -48,17 +49,18 @@
             <td>{{ $t->tanggal->format('d/m/Y') }}</td>
             <td>{{ $t->barang->nama_barang }}</td>
             <td>{{ $t->nomor_lot ?? '—' }}</td>
+            <td style="font-size:10px;">{{ $t->nama_supplier ?: $t->tujuan_keluar ?: '—' }}</td>
             <td style="text-align:right;font-weight:700;">{{ number_format($t->quantity) }}</td>
             <td>{{ $t->user->username }}</td>
             <td style="color:#555;font-size:10px;">{{ $t->keterangan ?: '—' }}{{ $t->is_void ? ' [BATAL]' : '' }}</td>
         </tr>
         @empty
-        <tr><td colspan="8" style="text-align:center;padding:20px;color:#888;">Tidak ada data</td></tr>
+        <tr><td colspan="9" style="text-align:center;padding:20px;color:#888;">Tidak ada data</td></tr>
         @endforelse
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="5" style="text-align:right;">Total qty tidak void:</td>
+            <td colspan="6" style="text-align:right;">Total qty tidak void:</td>
             <td style="text-align:right;">{{ number_format($transaksis->where('is_void',false)->sum('quantity')) }}</td>
             <td colspan="2"></td>
         </tr>

@@ -8,4 +8,3 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('gudang:cek-stok-minimum')->dailyAt('08:00');

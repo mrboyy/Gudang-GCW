@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Sistem Gudang PT GCW</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -19,7 +16,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             padding: 24px 16px;
         }
@@ -186,6 +183,7 @@
         }
         .btn-login:hover  { background: #D96E10; box-shadow: 0 4px 14px rgba(245,130,31,.4); }
         .btn-login:active { background: #C26209; }
+        .btn-login:disabled { background: #9CA3AF; box-shadow: none; cursor: not-allowed; }
 
         .login-hint {
             font-size: .76rem;
@@ -204,6 +202,10 @@
         @media (max-width: 460px) {
             .login-head  { padding: 22px 22px 18px; }
             .login-body  { padding: 22px 22px 26px; }
+        }
+
+        .form-label {
+            font-family: inherit;
         }
     </style>
 </head>
@@ -225,7 +227,12 @@
 
         <div class="login-body">
 
-            @if($errors->any())
+            @if(session('error'))
+            <div class="alert-error">
+                <i class="bi bi-clock-history"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+            @elseif($errors->any())
             <div class="alert-error">
                 <i class="bi bi-exclamation-circle-fill"></i>
                 <span>{{ $errors->first() }}</span>
@@ -261,7 +268,14 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-login">Masuk</button>
+                <div class="d-flex align-items-center justify-content-between mb-2" style="margin-top:10px;">
+                    <label style="display:flex;align-items:center;gap:7px;font-size:.82rem;color:#6B7280;cursor:pointer;user-select:none;">
+                        <input type="checkbox" name="remember" style="width:15px;height:15px;accent-color:#F5821F;cursor:pointer;">
+                        Ingat saya
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">Masuk</button>
             </form>
 
             <p class="login-hint">Lupa password? Hubungi administrator.</p>
@@ -278,6 +292,11 @@ function togglePass() {
     if (inp.type === 'password') { inp.type = 'text'; ico.className = 'bi bi-eye-slash'; }
     else { inp.type = 'password'; ico.className = 'bi bi-eye'; }
 }
+document.querySelector('form').addEventListener('submit', function() {
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+});
 </script>
 </body>
 </html>

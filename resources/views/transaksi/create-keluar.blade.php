@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Input Barang Keluar')
 @section('page-title', 'Input Barang Keluar')
 
@@ -52,10 +52,14 @@
         </div>
 
         <div class="mb-4">
-            <label class="form-label">Nomor Lot <span class="badge bg-secondary" style="font-size:.68rem;font-weight:500;">Opsional</span></label>
-            <select name="nomor_lot" id="nomorLot" class="form-select">
-                <option value="">— Ambil dari semua stok —</option>
+            <label class="form-label">Lot <span class="text-danger">*</span></label>
+            <select name="nomor_lot" id="nomorLot" class="form-select @error('nomor_lot') is-invalid @enderror" required>
+                <option value="" disabled selected>— Pilih barang terlebih dahulu —</option>
             </select>
+            @error('nomor_lot')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div id="lotWarning" class="mt-1" style="display:none;font-size:.78rem;color:var(--danger);">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>Stok barang ini tidak memiliki Lot. Lakukan barang masuk dengan Lot terlebih dahulu.
+            </div>
         </div>
 
         <div class="mb-4">
@@ -84,9 +88,8 @@
         </div>
 
         <div class="mb-4" id="divInternalDetail" style="display:none;">
-            <label class="form-label">Nama Orang/Departemen <span class="text-danger">*</span></label>
-            <input type="text" name="detail_internal" id="detailInternal" class="form-control" placeholder="Contoh: Budi - Produksi">
-            <div class="text-muted mt-1" style="font-size:.7rem;">Wajib diisi untuk pengeluaran internal</div>
+            <label class="form-label">User/Departemen <span class="text-danger">*</span></label>
+            <input type="text" name="detail_internal" id="detailInternal" class="form-control">
         </div>
 
         <input type="hidden" name="tujuan_keluar" id="tujuanKeluar" value="Customer">
@@ -108,7 +111,7 @@
         <a href="{{ route('transaksi.keluar') }}" class="btn btn-outline-secondary">
             <i class="bi bi-x me-1"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary px-5">
+        <button type="submit" class="btn btn-primary px-5" id="submitBtnKeluar">
             <i class="bi bi-check-lg me-2"></i>Simpan Transaksi
         </button>
     </div>
@@ -121,67 +124,65 @@
 
 @push('scripts')
 <script>
-const barangSelect = document.getElementById('barangSelect');
-const nomorLot     = document.getElementById('nomorLot');
-const stokInfo     = document.getElementById('stokInfo');
-const satuanLabel  = document.getElementById('satuanLabel');
+const barangSelect  = document.getElementById('barangSelect');
+const nomorLot      = document.getElementById('nomorLot');
+const stokInfo      = document.getElementById('stokInfo');
+const satuanLabel   = document.getElementById('satuanLabel');
+const lotWarning    = document.getElementById('lotWarning');
+const submitBtn     = document.querySelector('button[type="submit"]');
 
 function muatLotDanStok() {
     var idBarang = barangSelect.value;
     if (!idBarang) {
         stokInfo.innerHTML = '';
-        nomorLot.innerHTML = '<option value="">— Ambil dari semua stok —</option>';
+        nomorLot.innerHTML = '<option value="" disabled selected>— Pilih barang terlebih dahulu —</option>';
+        lotWarning.style.display = 'none';
+        submitBtn.disabled = false;
         return;
     }
 
-    // Gunakan fungsi url() Laravel langsung di dalam blade agar pasti benar jalurnya
     var url = "{{ url('transaksi/cek-stok') }}?id_barang=" + idBarang;
-    
-    console.log('Mengecek stok ke:', url);
 
     fetch(url)
         .then(function(r) {
-            if (!r.ok) {
-                console.error('Response error:', r);
-                throw new Error('HTTP error! status: ' + r.status);
-            }
+            if (!r.ok) throw new Error('HTTP error ' + r.status);
             return r.json();
         })
         .then(function(data) {
-            console.log('Data stok diterima:', data);
             satuanLabel.textContent = data.satuan || 'pcs';
-            var opts = '';
+            lotWarning.style.display = 'none';
+            submitBtn.disabled = false;
+
             if (data.lots && data.lots.length > 0) {
-                opts = '<option value="">— Pilih Nomor Lot (Opsional) —</option>';
+                var opts = '<option value="" disabled selected>— Pilih Lot —</option>';
                 data.lots.forEach(function(lot) {
                     opts += '<option value="' + lot.nomor_lot + '">' + lot.nomor_lot + ' (stok: ' + lot.stok_akhir + ' ' + data.satuan + ')</option>';
                 });
+                nomorLot.innerHTML = opts;
+                nomorLot.disabled = false;
             } else if (data.stok > 0) {
-                opts = '<option value="">— Stok tersedia tanpa nomor lot —</option>';
+                nomorLot.innerHTML = '<option value="" disabled selected>— Stok tidak memiliki Lot —</option>';
+                lotWarning.style.display = 'block';
+                submitBtn.disabled = true;
             } else {
-                opts = '<option value="">— Stok Kosong —</option>';
+                nomorLot.innerHTML = '<option value="" disabled selected>— Stok kosong —</option>';
             }
-            nomorLot.innerHTML = opts;
             tampilStok(data.stok, data.satuan, '');
         })
         .catch(function(err) {
-            console.error('Gagal memuat stok:', err);
-            stokInfo.innerHTML = '<div class="text-danger small">Gagal memuat data stok. (' + err.message + ')</div>';
+            stokInfo.innerHTML = '<div class="text-danger small">Gagal memuat data stok.</div>';
         });
 }
 
 nomorLot.addEventListener('change', function() {
     var idBarang = barangSelect.value;
-    if (!idBarang) return;
     var lot = this.value;
+    if (!idBarang || !lot) return;
     var url = "{{ url('transaksi/cek-stok') }}?id_barang=" + idBarang + "&nomor_lot=" + encodeURIComponent(lot);
-
-    console.log('Mengecek stok lot ke:', url);
-
     fetch(url)
         .then(function(r) { return r.json(); })
         .then(function(data) { tampilStok(data.stok, data.satuan, lot); })
-        .catch(function(err) { console.error('Error:', err); });
+        .catch(function() {});
 });
 
 function tampilStok(stok, satuan, lot) {
@@ -224,5 +225,11 @@ function updateTujuan() {
 tipeCustomer.addEventListener('change', updateTujuan);
 tipeInternal.addEventListener('change', updateTujuan);
 detailInternal.addEventListener('input', updateTujuan);
+
+document.querySelector('form').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtnKeluar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+});
 </script>
 @endpush

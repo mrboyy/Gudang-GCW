@@ -16,7 +16,8 @@
         .print-wrap { max-width: 800px; margin: 0 auto; padding: 32px 28px; }
 
         .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #111; }
-        .doc-header .company { }
+        .doc-header .company { display: flex; align-items: center; gap: 12px; }
+        .doc-header .company .co-logo { height: 48px; width: auto; object-fit: contain; }
         .doc-header .company .co-name { font-size: 15px; font-weight: 700; color: #111; letter-spacing: -0.02em; }
         .doc-header .company .co-sub { font-size: 10px; color: #555; margin-top: 2px; }
         .doc-header .doc-title { text-align: right; }
@@ -55,12 +56,8 @@
         .highlight-box .qty-val { font-size: 28px; font-weight: 800; color: #111; line-height: 1; letter-spacing: -0.04em; }
         .highlight-box .qty-unit { font-size: 13px; font-weight: 500; color: #555; margin-left: 4px; }
 
-        .badge-jenis { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.03em; }
-        .badge-masuk { background: #ECFDF5; color: #065F46; border: 1px solid #6EE7B7; }
-        .badge-keluar { background: #FFF7ED; color: #9A3412; border: 1px solid #FDBA74; }
-        .badge-retur { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
-        .badge-retur-p { background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D; }
-        .badge-void { background: #FEE2E2; color: #991B1B; }
+        .badge-jenis { font-size: 11px; }
+        .badge-masuk, .badge-keluar, .badge-retur, .badge-retur-p, .badge-void { }
 
         .doc-footer {
             margin-top: 32px; padding-top: 14px; border-top: 1px solid #E5E7EB;
@@ -80,29 +77,24 @@
 
         .no-print { }
         .print-btn-bar {
-            position: fixed; top: 0; left: 0; right: 0;
-            background: #111827; padding: 10px 20px;
-            display: flex; align-items: center; gap: 12px;
+            position: fixed; top: 12px; right: 16px;
             z-index: 999;
         }
         .print-btn-bar button {
-            background: #F5821F; border: none; color: #fff;
-            padding: 7px 18px; border-radius: 5px; font-weight: 600; font-size: 13px;
+            background: #fff; border: 1px solid #ccc; color: #333;
+            padding: 5px 16px; border-radius: 4px; font-size: 13px;
             cursor: pointer;
         }
-        .print-btn-bar button:hover { background: #D96E10; }
-        .print-btn-bar .pbb-info { color: #9CA3AF; font-size: 12px; }
-        .print-btn-bar .pbb-close { margin-left: auto; color: #6B7280; font-size: 12px; cursor: pointer; text-decoration: none; }
-        .print-btn-bar .pbb-close:hover { color: #D1D5DB; }
+        .print-btn-bar button:hover { background: #f0f0f0; }
 
         @media print {
             .no-print, .print-btn-bar { display: none !important; }
-            .print-wrap { padding: 0; max-width: 100%; }
-            body { font-size: 11px; }
-            @page { margin: 1.5cm; size: A4; }
+            .print-wrap { padding: 1cm 1.2cm; max-width: 100%; box-shadow: none; border-radius: 0; margin: 0; }
+            body { font-size: 11px; background: #fff; padding-top: 0; }
+            @page { margin: 0; size: A4; }
         }
         @media screen {
-            body { background: #F3F4F6; padding-top: 54px; }
+            body { background: #F3F4F6; padding-top: 0; }
             .print-wrap { background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.08); border-radius: 8px; margin: 20px auto; }
         }
     </style>
@@ -110,16 +102,17 @@
 <body>
 
 <div class="print-btn-bar no-print">
-    <button onclick="window.print()">&#128438; Simpan / Cetak PDF</button>
-    <span class="pbb-info">Pilih "Save as PDF" di dialog cetak untuk unduh PDF</span>
-    <a href="javascript:window.close()" class="pbb-close">✕ Tutup</a>
+    <button onclick="window.print()">Cetak</button>
 </div>
 
 <div class="print-wrap">
     <div class="doc-header">
         <div class="company">
-            <div class="co-name">PT Galih Cipta Wisesa</div>
-            <div class="co-sub">Sistem Pencatatan Gudang</div>
+            <img src="{{ asset('images/logo-pt.png') }}" alt="Logo PT GCW" class="co-logo">
+            <div>
+                <div class="co-name">PT Galih Cipta Wisesa</div>
+                <div class="co-sub">Sistem Pencatatan Gudang</div>
+            </div>
         </div>
         <div class="doc-title">
             <div class="dt-label">@yield('doc-title')</div>

@@ -22,23 +22,17 @@
     <div class="card-body py-3">
         <form method="GET">
             <div class="row g-2 align-items-end">
-                <div class="col-md-5">
+                <div class="col-12 col-md-4">
                     <input type="text" name="search" class="form-control"
-                           placeholder="Cari nama barang, merk, no. transaksi..." value="{{ request('search') }}">
+                           placeholder="Cari nama barang atau no. transaksi..." value="{{ request('search') }}">
                 </div>
-                <div class="col-md-5">
-                    <div class="d-flex gap-2 flex-wrap">
-                        @foreach(['hari'=>'Hari Ini','bulan'=>'Bulan Ini','tahun'=>'Tahun Ini'] as $val=>$label)
-                        <a href="{{ route('transaksi.masuk', array_merge(request()->except('periode','tanggal_dari','tanggal_sampai','page'), ['periode'=>$val])) }}"
-                           class="btn btn-sm {{ request('periode')===$val ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $label }}</a>
-                        @endforeach
-                        @if(!in_array(request('periode'),['hari','bulan','tahun']))
-                        <input type="date" name="tanggal_dari" class="form-control form-control-sm" style="width:auto;" value="{{ request('tanggal_dari') }}">
-                        <input type="date" name="tanggal_sampai" class="form-control form-control-sm" style="width:auto;" value="{{ request('tanggal_sampai') }}">
-                        @endif
-                    </div>
+                <div class="col-6 col-md-3">
+                    <input type="date" name="tanggal_dari" class="form-control" value="{{ request('tanggal_dari') }}">
                 </div>
-                <div class="col-md-2 d-flex gap-2">
+                <div class="col-6 col-md-3">
+                    <input type="date" name="tanggal_sampai" class="form-control" value="{{ request('tanggal_sampai') }}">
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">Cari</button>
                     @if(request()->hasAny(['search','tanggal_dari','tanggal_sampai','periode']))
                     <a href="{{ route('transaksi.masuk') }}" class="btn btn-outline-secondary">Reset</a>
@@ -56,25 +50,34 @@
                 <thead>
                     <tr>
                         <th>No. Transaksi</th>
-                        <th>Tanggal</th>
+                        <th class="d-none d-md-table-cell">Tanggal</th>
                         <th>Nama Barang</th>
-                        <th>No. Lot</th>
+                        <th class="d-none d-md-table-cell">Lot</th>
+                        <th class="d-none d-lg-table-cell">Supplier</th>
                         <th class="text-end">Jumlah</th>
                         <th class="text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php $prevTglMasuk = null; @endphp
                     @forelse($transaksis as $t)
+                    @php $tglStr = $t->tanggal->locale('id')->isoFormat('dddd, D MMMM Y'); @endphp
+                    @if($tglStr !== $prevTglMasuk)
+                    <tr style="background:var(--bg);"><td colspan="7" style="padding:7px 18px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);border-bottom:1px solid var(--border);">
+                        <i class="bi bi-calendar3 me-2" style="color:var(--brand);"></i>{{ $tglStr }}</td></tr>
+                    @php $prevTglMasuk = $tglStr; @endphp
+                    @endif
                     <tr @if($t->is_void) style="opacity:.5;" @endif>
                         <td>
                             <span class="badge badge-masuk">{{ $t->no_transaksi }}</span>
                             @if($t->is_void)
-                            <span class="badge ms-1" style="background:#FEE2E2;color:#DC2626;font-size:.7rem;">Batal</span>
+                            <span class="badge ms-1" style="background:#fff5f5;color:#991b1b;font-size:.7rem;border:1px solid #fecaca;">Batal</span>
                             @endif
                         </td>
-                        <td>{{ $t->tanggal->format('d/m/Y') }}</td>
+                        <td class="d-none d-md-table-cell">{{ $t->tanggal->format('d/m/Y') }}</td>
                         <td class="fw-semibold">{{ $t->barang->nama_barang }}</td>
-                        <td>{{ $t->nomor_lot ?: '—' }}</td>
+                        <td class="d-none d-md-table-cell">{{ $t->nomor_lot ?: '—' }}</td>
+                        <td class="text-muted d-none d-lg-table-cell" style="font-size:.85rem;">{{ $t->nama_supplier ?: '—' }}</td>
                         <td class="text-end fw-semibold" style="color:{{ $t->is_void ? 'var(--text-muted)' : 'var(--success)' }};">
                             {{ $t->quantity }} <small class="text-muted fw-normal">{{ $t->barang->satuan }}</small>
                         </td>
@@ -85,7 +88,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="empty-state"><i class="bi bi-inbox"></i><p>Belum ada transaksi barang masuk</p></td></tr>
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i><p>Belum ada transaksi barang masuk</p></td></tr>
                     @endforelse
                 </tbody>
             </table>

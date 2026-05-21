@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class AuditLog extends Model
 {
@@ -35,6 +36,8 @@ class AuditLog extends Model
                 'new_values' => $new ?: null,
                 'ip_address' => request()->ip(),
             ]);
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            Log::error('AuditLog failed: ' . $e->getMessage(), ['action' => $action, 'description' => $description]);
+        }
     }
 }

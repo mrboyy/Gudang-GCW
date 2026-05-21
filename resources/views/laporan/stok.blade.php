@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Laporan Stok')
 @section('page-title', 'Laporan Stok')
 
@@ -11,7 +11,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div class="page-header">
         <h4>Laporan Stok Barang</h4>
-        <p>Klik barang untuk melihat detail stok per nomor lot.</p>
+        <p>Klik barang untuk melihat detail stok per Lot.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <div class="btn-group" role="group">
@@ -39,24 +39,69 @@
 
 <div class="card mb-3">
     <div class="card-body py-3">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-7">
+        <form method="GET" id="stokForm" class="row g-2 align-items-end">
+            <div class="col-md-5">
                 <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Cari</label>
                 <input type="text" name="search" class="form-control"
                        placeholder="Nama barang..." value="{{ request('search') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Group By</label>
-                <select name="group_by" class="form-select">
+                <select name="group_by" class="form-select" id="groupBySelect">
                     <option value="">— Tanpa Grup —</option>
-                    <option value="satuan" {{ request('group_by') === 'satuan' ? 'selected' : '' }}>Satuan</option>
+                    <option value="satuan"  {{ request('group_by') === 'satuan'  ? 'selected' : '' }}>Per Satuan</option>
+                    <option value="merk"    {{ request('group_by') === 'merk'    ? 'selected' : '' }}>Per Merk</option>
+                    <option value="tanggal" {{ request('group_by') === 'tanggal' ? 'selected' : '' }}>Per Tanggal Update</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-2 align-items-end">
                 <button type="submit" class="btn btn-primary flex-fill">Cari</button>
-                @if(request()->hasAny(['search','group_by']))
-                <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary">Reset</a>
+                @if(request()->hasAny(['search','group_by','update_mode','update_tanggal','update_bulan','update_tahun']))
+                <a href="{{ route('laporan.stok') }}" class="btn btn-outline-secondary flex-shrink-0">Reset</a>
                 @endif
+            </div>
+
+            {{-- Filter Tanggal Update — muncul saat group_by=tanggal --}}
+            <div class="col-12" id="filterTanggalBox" style="{{ request('group_by') === 'tanggal' ? '' : 'display:none;' }}">
+                <div class="row g-2 align-items-end pt-1">
+                    <div class="col-auto">
+                        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Filter Periode</label>
+                        <select name="update_mode" class="form-select" id="updateMode" style="min-width:180px;">
+                            <option value="">— Semua Periode —</option>
+                            <option value="hari"  {{ request('update_mode') === 'hari'  ? 'selected' : '' }}>Per Hari</option>
+                            <option value="bulan" {{ request('update_mode') === 'bulan' ? 'selected' : '' }}>Per Bulan & Tahun</option>
+                            <option value="tahun" {{ request('update_mode') === 'tahun' ? 'selected' : '' }}>Per Tahun</option>
+                        </select>
+                    </div>
+
+                    {{-- Per Hari --}}
+                    <div class="col-auto" id="inputHariBox" style="display:none;">
+                        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Tanggal</label>
+                        <input type="date" name="update_tanggal" class="form-control" value="{{ request('update_tanggal') }}">
+                    </div>
+
+                    {{-- Per Bulan & Tahun --}}
+                    <div class="col-auto" id="inputBulanBox" style="display:none;">
+                        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Bulan</label>
+                        <select name="update_bulan" class="form-select">
+                            @foreach(['01'=>'Januari','02'=>'Februari','03'=>'Maret','04'=>'April','05'=>'Mei','06'=>'Juni','07'=>'Juli','08'=>'Agustus','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Desember'] as $num=>$nama)
+                            <option value="{{ $num }}" {{ request('update_bulan') === $num ? 'selected' : '' }}>{{ $nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-auto" id="inputTahunBulanBox" style="display:none;">
+                        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Tahun</label>
+                        <input type="number" name="update_tahun" class="form-control" style="width:100px;"
+                               value="{{ request('update_tahun', date('Y')) }}" min="2020" max="2099">
+                    </div>
+
+                    {{-- Per Tahun saja --}}
+                    <div class="col-auto" id="inputTahunBox" style="display:none;">
+                        <label class="form-label" style="font-size:.78rem;font-weight:600;color:var(--text-muted);">Tahun</label>
+                        <input type="number" name="update_tahun" class="form-control" style="width:100px;"
+                               value="{{ request('update_tahun', date('Y')) }}" min="2020" max="2099">
+                    </div>
+                </div>
             </div>
         </form>
     </div>
@@ -72,8 +117,10 @@
             $habis   = $b->isStokMinimum();
             $lots    = $b->stoks->sortBy('nomor_lot');
             $curGroupTile = match($groupBy) {
-                'satuan' => $b->satuan,
-                default  => null,
+                'satuan'  => $b->satuan,
+                'merk'    => ($b->merk ?: '— Tanpa Merk —'),
+                'tanggal' => ($b->last_update ? \Carbon\Carbon::parse($b->last_update)->format('d/m/Y') : '— Belum Ada Update —'),
+                default   => null,
             };
         @endphp
 
@@ -170,8 +217,10 @@
                         $lots    = $b->stoks->sortBy('nomor_lot');
                         $hasLots = $b->stoks->isNotEmpty();
                         $curGroup = match($groupBy) {
-                            'satuan' => $b->satuan,
-                            default  => null,
+                            'satuan'  => $b->satuan,
+                            'merk'    => ($b->merk ?: '— Tanpa Merk —'),
+                            'tanggal' => ($b->last_update ? \Carbon\Carbon::parse($b->last_update)->format('d/m/Y') : '— Belum Ada Update —'),
+                            default   => null,
                         };
                     @endphp
                     @if($groupBy && $curGroup !== $prevGroup)
@@ -213,11 +262,11 @@
                     <tr class="lot-detail-row" id="lot-{{ $b->id }}" style="display:none;">
                         <td colspan="7" style="padding:0;background:#FAFBFC;border-bottom:2px solid var(--border);">
                             <div style="padding:10px 52px 14px;">
-                                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">Detail Per Nomor Lot</div>
+                                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">Detail Per Lot</div>
                                 <table class="table table-sm mb-0" style="background:transparent;">
                                     <thead>
                                         <tr style="background:transparent;">
-                                            <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Nomor Lot</th>
+                                            <th style="background:transparent;font-size:.68rem;padding:6px 12px;">Lot</th>
                                             <th class="text-end" style="background:transparent;font-size:.68rem;padding:6px 12px;">Stok</th>
                                         </tr>
                                     </thead>
@@ -573,6 +622,32 @@ document.querySelectorAll('.stok-row.has-lots').forEach(function(row) {
         detail.style.display = isOpen ? 'none' : 'table-row';
     });
 });
+</script>
+<script>
+// ── Filter Tanggal Update ──
+const groupBySelect    = document.getElementById('groupBySelect');
+const filterTanggalBox = document.getElementById('filterTanggalBox');
+const updateMode       = document.getElementById('updateMode');
+const inputHariBox     = document.getElementById('inputHariBox');
+const inputBulanBox    = document.getElementById('inputBulanBox');
+const inputTahunBulanBox = document.getElementById('inputTahunBulanBox');
+const inputTahunBox    = document.getElementById('inputTahunBox');
+
+function syncFilterVisibility() {
+    const isTanggal = groupBySelect.value === 'tanggal';
+    filterTanggalBox.style.display = isTanggal ? '' : 'none';
+    if (!isTanggal) return;
+
+    const mode = updateMode.value;
+    inputHariBox.style.display      = mode === 'hari'  ? '' : 'none';
+    inputBulanBox.style.display     = mode === 'bulan' ? '' : 'none';
+    inputTahunBulanBox.style.display= mode === 'bulan' ? '' : 'none';
+    inputTahunBox.style.display     = mode === 'tahun' ? '' : 'none';
+}
+
+groupBySelect.addEventListener('change', syncFilterVisibility);
+updateMode.addEventListener('change', syncFilterVisibility);
+syncFilterVisibility();
 </script>
 @endpush
 

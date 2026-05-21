@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Detail Transaksi')
 @section('page-title', 'Detail Transaksi')
 
@@ -49,7 +49,7 @@
 @endif
 
 @if($transaksi->is_void)
-<div class="alert alert-danger d-flex align-items-start gap-2 mb-3" style="border-left:4px solid #DC2626;">
+<div class="alert alert-danger d-flex align-items-start gap-2 mb-3" style="border-left:4px solid #b91c1c;">
     <i class="bi bi-slash-circle-fill fs-5 flex-shrink-0 mt-1"></i>
     <div>
         <div class="fw-bold mb-1">Transaksi Dibatalkan</div>
@@ -74,13 +74,18 @@
         <div class="text-muted" style="font-size:.78rem;">{{ $transaksi->no_transaksi }}</div>
     </div>
     @if($transaksi->is_void)
-    <span class="badge px-3 py-2" style="font-size:.82rem;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;">
+    <span class="badge px-3 py-2" style="font-size:.82rem;background:#fff5f5;color:#991b1b;border:1px solid #fecaca;">
         <i class="bi bi-slash-circle me-1"></i>Dibatalkan
     </span>
     @else
     <span class="badge px-3 py-2" style="font-size:.82rem;background:{{ $badgeBg }};color:{{ $badgeClr }};border:1px solid {{ $badgeBdr }};">
         <i class="bi bi-{{ $badgeIcon }} me-1"></i>{{ $badgeTxt }}
     </span>
+    @endif
+    @if(!$transaksi->is_void && (auth()->user()->isOperator() || auth()->user()->isKepalaGudang() || auth()->user()->isAdmin()))
+    <a href="{{ route('transaksi.edit', $transaksi) }}" class="btn btn-sm btn-outline-secondary" title="Edit keterangan/tanggal">
+        <i class="bi bi-pencil"></i>
+    </a>
     @endif
     <a href="{{ route('transaksi.print', $transaksi) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Cetak / Simpan PDF">
         <i class="bi bi-printer"></i>
@@ -101,13 +106,31 @@
     <div class="card-body p-0">
         @php
         $rows = [
-            ['icon'=>'bi-archive',       'label'=>'Nama Barang',  'val'=>$transaksi->barang->nama_barang.($transaksi->barang->merk ? ' — '.$transaksi->barang->merk : '')],
+            ['icon'=>'bi-archive',       'label'=>'Nama Barang',  'val'=>$transaksi->barang->nama_barang],
             ['icon'=>'bi-calendar3',     'label'=>'Tanggal',      'val'=>$transaksi->tanggal->isoFormat('D MMMM Y')],
-            ['icon'=>'bi-upc',           'label'=>'Nomor Lot',    'val'=>$transaksi->nomor_lot ?: '—'],
+            ['icon'=>'bi-upc',           'label'=>'Lot',    'val'=>$transaksi->nomor_lot ?: '—'],
+        ];
+
+        if ($jenis === 'keluar' && $transaksi->no_surat_jalan) {
+            $rows[] = ['icon'=>'bi-file-text', 'label'=>'No. Surat Jalan', 'val'=>$transaksi->no_surat_jalan];
+        }
+        if ($transaksi->no_ref && in_array($jenis, ['retur_customer', 'retur_produksi'])) {
+            $rows[] = ['icon'=>'bi-hash', 'label'=>'Ref. No. SJ', 'val'=>$transaksi->no_ref];
+        }
+
+        if ($transaksi->jenis_transaksi === 'keluar') {
+            $rows[] = ['icon'=>'bi-geo-alt', 'label'=>'Tujuan', 'val'=>$transaksi->tujuan_keluar ?: '—'];
+        }
+
+        if ($transaksi->jenis_transaksi === 'masuk' && $transaksi->nama_supplier) {
+            $rows[] = ['icon'=>'bi-truck', 'label'=>'Supplier', 'val'=>$transaksi->nama_supplier];
+        }
+
+        $rows = array_merge($rows, [
             ['icon'=>'bi-person',        'label'=>'Dicatat oleh', 'val'=>$transaksi->user->username],
             ['icon'=>'bi-chat-text',     'label'=>'Keterangan',   'val'=>$transaksi->keterangan ?: '—'],
             ['icon'=>'bi-clock-history', 'label'=>'Waktu Input',  'val'=>$transaksi->created_at->format('d/m/Y H:i')],
-        ];
+        ]);
         @endphp
 
         @foreach($rows as $i => $row)
@@ -124,7 +147,24 @@
     </div>
 </div>
 
-@if(!$transaksi->is_void && (auth()->user()->isAdmin() || auth()->user()->isKepalaGudang()))
+@if(!$transaksi->is_void && $transaksi->jenis_transaksi === 'keluar' && (auth()->user()->isOperator() || auth()->user()->isAdmin() || auth()->user()->isKepalaGudang()))
+@php
+    $isCustomer = str_starts_with($transaksi->tujuan_keluar ?? '', 'Customer');
+    $returRoute = $isCustomer ? route('retur.create', ['no_ref' => $transaksi->no_transaksi]) : route('retur.produksi.create', ['no_ref' => $transaksi->no_transaksi]);
+    $returLabel = $isCustomer ? 'Retur Customer' : 'Retur Produksi';
+    $returIcon  = $isCustomer ? 'arrow-return-left' : 'arrow-counterclockwise';
+@endphp
+<div class="mt-3 d-flex justify-content-between align-items-center">
+    <a href="{{ $returRoute }}" class="btn btn-sm btn-outline-info">
+        <i class="bi bi-{{ $returIcon }} me-1"></i>{{ $returLabel }}
+    </a>
+    @if(auth()->user()->isAdmin() || auth()->user()->isKepalaGudang())
+    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#voidModal">
+        <i class="bi bi-slash-circle me-1"></i>Batalkan Transaksi
+    </button>
+    @endif
+</div>
+@elseif(!$transaksi->is_void && (auth()->user()->isAdmin() || auth()->user()->isKepalaGudang()))
 <div class="mt-3 text-end">
     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#voidModal">
         <i class="bi bi-slash-circle me-1"></i>Batalkan Transaksi

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Laporan Transaksi')
 @section('page-title', 'Laporan Transaksi')
 
@@ -25,8 +25,8 @@
         </div>
         <a href="{{ route('laporan.export-excel', request()->all()) }}"
            class="btn btn-success d-flex align-items-center gap-2">
-            <i class="bi bi-file-earmark-spreadsheet"></i>
-            <span>Export CSV</span>
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>Export Excel</span>
         </a>
         <a href="{{ route('laporan.print-transaksi', request()->only(['tanggal_dari','tanggal_sampai','jenis_transaksi'])) }}"
            target="_blank"
@@ -66,10 +66,10 @@
     <div class="col-md-4">
         <div class="stat-card">
             <div class="d-flex align-items-center gap-3">
-                <div class="s-icon" style="background:var(--info-soft);color:var(--info);"><i class="bi bi-arrow-return-left"></i></div>
+                <div class="s-icon" style="background:var(--warning-soft);color:var(--warning);"><i class="bi bi-arrow-return-left"></i></div>
                 <div>
                     <div class="s-label">Total Retur</div>
-                    <div class="s-num" style="color:var(--info);">{{ $transaksis->whereIn('jenis_transaksi',['retur_customer','retur_produksi'])->sum('quantity') }}</div>
+                    <div class="s-num" style="color:var(--warning);">{{ $transaksis->whereIn('jenis_transaksi',['retur_customer','retur_produksi'])->sum('quantity') }}</div>
                 </div>
             </div>
         </div>
@@ -81,42 +81,36 @@
 <div class="card mb-3">
     <div class="card-body py-3">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-12">
-                <div class="d-flex gap-2 flex-wrap mb-1">
-                    @foreach(['hari'=>'Hari Ini','bulan'=>'Bulan Ini','tahun'=>'Tahun Ini'] as $val=>$label)
-                    <a href="{{ route('laporan.transaksi', array_merge(request()->except('periode','tanggal_dari','tanggal_sampai'), ['periode'=>$val])) }}"
-                       class="btn btn-sm {{ request('periode')===$val ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $label }}</a>
-                    @endforeach
-                    @if(request('periode'))
-                    <a href="{{ route('laporan.transaksi', request()->except('periode')) }}" class="btn btn-sm btn-outline-secondary">Range Tanggal</a>
-                    @endif
-                </div>
-            </div>
-            @if(!in_array(request('periode'),['hari','bulan','tahun']))
-            <div class="col-md-2">
+            {{-- Baris 1: tanggal + jenis + lot --}}
+            <div class="col-6 col-md-3">
+                <label class="form-label" style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Dari</label>
                 <input type="date" name="tanggal_dari" class="form-control" value="{{ $tanggalDari }}">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-3">
+                <label class="form-label" style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Sampai</label>
                 <input type="date" name="tanggal_sampai" class="form-control" value="{{ $tanggalSampai }}">
             </div>
-            @else
-            <input type="hidden" name="periode" value="{{ request('periode') }}">
-            @endif
-            <div class="col-md-2">
+            <div class="col-6 col-md-3">
+                <label class="form-label" style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Jenis</label>
                 <select name="jenis_transaksi" class="form-select">
                     <option value="">Semua Jenis</option>
-                    <option value="masuk" {{ request('jenis_transaksi') === 'masuk' ? 'selected' : '' }}>Masuk</option>
-                    <option value="keluar" {{ request('jenis_transaksi') === 'keluar' ? 'selected' : '' }}>Keluar</option>
+                    <option value="masuk"          {{ request('jenis_transaksi') === 'masuk'          ? 'selected' : '' }}>Masuk</option>
+                    <option value="keluar"         {{ request('jenis_transaksi') === 'keluar'         ? 'selected' : '' }}>Keluar</option>
                     <option value="retur_customer" {{ request('jenis_transaksi') === 'retur_customer' ? 'selected' : '' }}>Retur Customer</option>
+                    <option value="retur_produksi" {{ request('jenis_transaksi') === 'retur_produksi' ? 'selected' : '' }}>Retur Produksi</option>
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-6 col-md-3">
+                <label class="form-label" style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Lot / Nama Barang</label>
                 <input type="text" name="nomor_lot" class="form-control"
-                       placeholder="Filter No. Lot atau Nama Barang..." value="{{ request('nomor_lot') }}">
+                       placeholder="Cari..." value="{{ request('nomor_lot') }}">
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-fill">Tampilkan</button>
-                <a href="{{ route('laporan.transaksi') }}" class="btn btn-outline-secondary">Reset</a>
+            {{-- Baris 2: tombol --}}
+            <div class="col-12 d-flex justify-content-end gap-2 pt-1">
+                <button type="submit" class="btn btn-primary px-4">Cari</button>
+                @if(request()->hasAny(['tanggal_dari','tanggal_sampai','jenis_transaksi','nomor_lot','periode']))
+                <a href="{{ route('laporan.transaksi') }}" class="btn btn-outline-secondary flex-shrink-0">Reset</a>
+                @endif
             </div>
         </form>
     </div>
@@ -136,7 +130,7 @@
         $jenis = $t->jenis_transaksi;
         $isMasuk = $jenis === 'masuk';
         $isKeluar = $jenis === 'keluar';
-        $jenisLabel = match($jenis) { 'masuk'=>'MASUK','keluar'=>'KELUAR','retur_customer'=>'RETUR','retur_produksi'=>'RETUR PROD', default=>strtoupper($jenis) };
+        $jenisLabel = match($jenis) { 'masuk'=>'MASUK','keluar'=>'KELUAR','retur_customer'=>'RETUR CUSTOMER','retur_produksi'=>'RETUR PRODUKSI', default=>strtoupper($jenis) };
         $accentClr  = match($jenis) { 'masuk'=>'var(--success)','keluar'=>'var(--danger)','retur_customer'=>'var(--info)', default=>'var(--warning)' };
         $accentBg   = match($jenis) { 'masuk'=>'var(--success-soft)','keluar'=>'var(--danger-soft)','retur_customer'=>'var(--info-soft)', default=>'var(--warning-soft)' };
         $icon       = match($jenis) { 'masuk'=>'box-arrow-in-down','keluar'=>'box-arrow-up','retur_customer'=>'arrow-return-left', default=>'arrow-counterclockwise' };
@@ -162,7 +156,7 @@
                         <i class="bi bi-{{ $icon }} me-1"></i>{{ $jenisLabel }}
                     </span>
                     @if($t->is_void)
-                    <span class="txn-badge ms-1" style="background:#FEE2E2;color:#DC2626;">BATAL</span>
+                    <span class="txn-badge ms-1" style="background:#fff5f5;color:#991b1b;">BATAL</span>
                     @endif
                 </div>
                 <div class="txn-date">{{ $t->tanggal->format('d/m/Y') }}</div>
@@ -208,7 +202,7 @@
                             <th>Jenis</th>
                             <th>Tanggal</th>
                             <th>Nama Barang</th>
-                            <th>No. Lot</th>
+                            <th>Lot</th>
                             <th>Supplier</th>
                             <th class="text-end">Qty</th>
                             <th>Operator</th>

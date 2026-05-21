@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Transaksi extends Model
 {
     protected $fillable = [
-        'no_transaksi', 'id_barang', 'id_user',
+        'no_transaksi', 'no_surat_jalan', 'no_ref', 'id_barang', 'id_user',
         'jenis_transaksi', 'tanggal', 'quantity', 'nomor_lot', 'keterangan',
+        'tujuan_keluar', 'nama_supplier',
         'is_void', 'void_by', 'void_at', 'void_reason',
     ];
 

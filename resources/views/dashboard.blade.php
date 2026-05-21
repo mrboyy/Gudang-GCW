@@ -147,6 +147,60 @@
     </div>
 </div>
 
+{{-- DAFTAR BARANG --}}
+@if(!auth()->user()->isOperator())
+<div class="nav-sep-page mb-2">Daftar Barang</div>
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-archive me-2" style="color:var(--brand);"></i>Stok Barang</span>
+        <a href="{{ route('barang.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:44px;"></th>
+                        <th>Nama Barang</th>
+                        <th>Kode</th>
+                        <th class="text-end">Stok</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($barangList as $b)
+                    @php $stok = $b->stok_total ?? 0; $min = $b->isStokMinimum(); @endphp
+                    <tr>
+                        <td style="padding:8px 10px;">
+                            @if($b->foto)
+                                <img src="{{ asset('storage/' . $b->foto) }}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                            @else
+                                <div style="width:36px;height:36px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-subtle);"><i class="bi bi-box"></i></div>
+                            @endif
+                        </td>
+                        <td class="fw-semibold" style="font-size:.9rem;">{{ $b->nama_barang }}</td>
+                        <td><code class="small" style="color:var(--text-muted);">{{ $b->kode_barang }}</code></td>
+                        <td class="text-end fw-bold" style="color:{{ $min ? 'var(--danger)' : 'var(--success)' }};">
+                            {{ number_format($stok) }} <small class="text-muted fw-normal">{{ $b->satuan }}</small>
+                        </td>
+                        <td class="text-center">
+                            @if($min)
+                                <span class="badge" style="background:#FEF2F2;color:#DC2626;border:1px solid #FCA5A5;font-size:.68rem;">Stok Rendah</span>
+                            @else
+                                <span class="badge" style="background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;font-size:.68rem;">Normal</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="5" class="empty-state"><i class="bi bi-inbox"></i><p>Belum ada barang</p></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- TRANSAKSI TERBARU --}}
 <div class="nav-sep-page mb-2">Transaksi Terbaru</div>
 <div class="row g-3">
@@ -229,13 +283,13 @@ if (ctx) {
                 {
                     label: 'Barang Masuk',
                     data: @json($chartMasuk),
-                    backgroundColor: 'rgba(5, 150, 105, 0.7)',
+                    backgroundColor: 'rgba(10, 124, 90, 0.55)',
                     borderRadius: 4,
                 },
                 {
                     label: 'Barang Keluar',
                     data: @json($chartKeluar),
-                    backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                    backgroundColor: 'rgba(185, 28, 28, 0.55)',
                     borderRadius: 4,
                 }
             ]

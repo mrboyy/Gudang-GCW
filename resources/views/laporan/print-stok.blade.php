@@ -1,4 +1,4 @@
-@extends('layouts.print')
+﻿@extends('layouts.print')
 
 @section('title', 'Laporan Stok')
 @section('doc-title', 'LAPORAN STOK BARANG')
@@ -19,10 +19,9 @@
         <tr>
             <th>Kode</th>
             <th>Nama Barang</th>
-            <th>Merk</th>
             <th>Satuan</th>
-            <th>Nomor Lot</th>
-            <th style="text-align:right">Stok</th>
+            <th>Lot</th>
+            <th style="text-align:right">On Hand</th>
             <th style="text-align:right">Total</th>
         </tr>
     </thead>
@@ -34,7 +33,6 @@
             <tr style="background:#F8F9FA;">
                 <td style="font-size:10px;color:#555;">{{ $b->kode_barang }}</td>
                 <td style="font-weight:700;">{{ $b->nama_barang }}</td>
-                <td style="color:#555;">{{ $b->merk }}</td>
                 <td>{{ $b->satuan }}</td>
                 <td style="color:#888;font-style:italic;">{{ $b->stoks->count() }} lot</td>
                 <td></td>
@@ -45,7 +43,6 @@
             <tr>
                 <td></td>
                 <td style="padding-left:20px;color:#555;font-size:11px;">↳ {{ $s->nomor_lot ?? 'Tanpa Lot' }}</td>
-                <td></td>
                 <td>{{ $b->satuan }}</td>
                 <td style="font-size:10px;font-family:monospace;">{{ $s->nomor_lot ?? '—' }}</td>
                 <td style="text-align:right;">{{ number_format($s->stok_akhir) }}</td>
@@ -56,7 +53,6 @@
             <tr>
                 <td style="font-size:10px;color:#555;">{{ $b->kode_barang }}</td>
                 <td style="font-weight:600;">{{ $b->nama_barang }}</td>
-                <td style="color:#555;">{{ $b->merk }}</td>
                 <td>{{ $b->satuan }}</td>
                 <td style="font-size:10px;font-family:monospace;">{{ $b->stoks->first()?->nomor_lot ?? '—' }}</td>
                 <td style="text-align:right;font-weight:700;">{{ number_format($totalStok) }}</td>
@@ -67,7 +63,7 @@
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="6" style="text-align:right;">Grand Total:</td>
+            <td colspan="5" style="text-align:right;">Grand Total:</td>
             <td style="text-align:right;">{{ number_format($barangs->sum(fn($b) => $b->stoks->sum('stok_akhir'))) }}</td>
         </tr>
     </tfoot>
